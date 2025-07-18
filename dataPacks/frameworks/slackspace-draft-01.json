@@ -1,0 +1,59 @@
+{
+    "title": "Slackspace Requirements Catalogue",
+    "version": "00.05",
+    "status": "draft",
+    "generated": "2025-07-07T00:00:00Z",
+    "maintainer": "Slackspace",
+    "_comment": "This draft document provides example data for a requirements catalogue used by Slackspace Consulting Services and may be used as template when transposing requirements from source documents.",
+    "requirements": [
+        {
+            "id": "SOC_TSC_2022_CC1.1:1",
+            "source_doc": "SOC_TSC_2022",
+            "source_id": "CC1.1",
+            "type": "Control Criteria",
+            "_comment": "Requirements.type can be any of: Control Criteria | Implementation Guidance | Implementation Example | Testing Requirement",
+            "title": "",
+            "text": "The entity demonstrates a commitment to integrity and ethical values.",
+            "mapping": [{
+                "id": "CSF_2_0_0_GV.RR-01:1",
+                "type": "subset",
+                "origin": "AI Analysis",
+                "_comment": "mapping.type = [equivalent | subset | superset | related | none]; mapping.origin = [manual review | AI Analysis | source doc | other]"
+            }],
+            "tags": ["governance", "ethics"],
+            "notes": [
+                {
+                    "text": "GOP related organizations cannot pass this control requirement.",
+                    "private": true,
+                    "author": "Slackspace",
+                    "date": "2023-10-01T00:00:00Z",
+                    "_comment": "notes can be used to provide additional context or information about the requirement to the auditor."
+                }
+            ],
+            "testPlans": [{
+                "id": "TP_SOC_TSC_2022_CC1.1_default",
+                "description": "Review ethics training logs and signed code of conduct attestations for at least 2 years.",
+                "author": "Slackspace",
+                "date": "2024-03-01T00:00:00Z"
+            }]
+        },
+        {
+            "id": "CSF_2_0_0_GV.RR-01:1",
+            "source_doc": "CSF_2_0_0",
+            "source_id": "GV.RR-01",
+            "type": "Control Criteria",
+            "title": "",
+            "text": "Organizational leadership is responsible and accountable for cybersecurity risk and fosters a culture that is risk-aware, ethical, and continually improving.",
+            "mapping": [{
+                "id": "SOC_TSC_2022_CC1.1:1",
+                "type": "superset",
+                "origin": "AI Analysis"
+            }],
+            "metadata": {
+                "_comment": "metadata tracks useful properties from the source doc.",
+                "element_type": "subcategory"            
+            },
+            "tags": ["governance", "continuous improvement", "risk management"]
+        }                
+    ]
+}

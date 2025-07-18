@@ -1,0 +1,161 @@
+{
+  "_metadata": {
+    "description": "Audit management system configuration",
+    "version": "1.0.0",
+    "lastUpdated": "2024-07-04",
+    "documentationUrl": "/docs/AuditManagementReference.md"
+  },
+  "_comments": {
+    "scheduling": "Audit scheduling and frequency settings",
+    "findings": "Audit findings management configuration",
+    "remediation": "Remediation workflow settings",
+    "notifications": "Audit-related notification settings"
+  },
+  "scheduling": {
+    "defaultFrequency": "quarterly",
+    "allowedFrequencies": ["weekly", "monthly", "quarterly", "semi-annually", "annually"],
+    "advanceNoticeDays": 30,
+    "reminderDays": [30, 14, 7, 1],
+    "autoScheduleFollowup": true,
+    "followupInterval": 90,
+    "workingDaysOnly": true,
+    "excludeHolidays": true,
+    "allowWeekendAudits": false,
+    "preferredStartTime": "09:00",
+    "maxAuditDuration": 30,
+    "minAuditGap": 7
+  },
+  "findings": {
+    "severityLevels": ["critical", "high", "medium", "low", "informational"],
+    "autoAssignSeverity": false,
+    "requireEvidence": true,
+    "evidenceTypes": ["document", "screenshot", "video", "log", "interview"],
+    "maxEvidenceSize": 10485760,
+    "allowedEvidenceFormats": ["pdf", "doc", "docx", "png", "jpg", "jpeg", "mp4", "txt", "log"],
+    "defaultDueDays": {
+      "critical": 7,
+      "high": 14,
+      "medium": 30,
+      "low": 60,
+      "informational": 90
+    },
+    "autoEscalation": true,
+    "escalationDays": {
+      "critical": 3,
+      "high": 7,
+      "medium": 14,
+      "low": 30
+    },
+    "requireManagerApproval": false,
+    "allowFindingTemplates": true,
+    "enableBulkActions": false
+  },
+  "remediation": {
+    "requireRemediationPlan": true,
+    "autoCreateRemediationTasks": false,
+    "defaultRemediationDays": {
+      "critical": 14,
+      "high": 30,
+      "medium": 60,
+      "low": 90,
+      "informational": 120
+    },
+    "allowRemediationExtension": true,
+    "maxExtensionDays": 30,
+    "requireExtensionApproval": true,
+    "trackRemediationProgress": true,
+    "requireProgressUpdates": true,
+    "progressUpdateFrequency": 7,
+    "enableRemediationTemplates": true,
+    "autoVerifyRemediation": false,
+    "requireEvidenceOfRemediation": true,
+    "allowPartialRemediation": true
+  },
+  "notifications": {
+    "enableEmailNotifications": true,
+    "enableInAppNotifications": true,
+    "enableSlackIntegration": false,
+    "notificationTriggers": {
+      "auditScheduled": true,
+      "auditStarted": true,
+      "auditCompleted": true,
+      "findingCreated": true,
+      "findingDue": true,
+      "findingOverdue": true,
+      "remediationStarted": true,
+      "remediationCompleted": true,
+      "remediationOverdue": true
+    },
+    "escalationNotifications": {
+      "enabled": true,
+      "escalateAfterDays": 7,
+      "escalationRecipients": ["manager", "security-team"],
+      "maxEscalationLevel": 3
+    },
+    "digestNotifications": {
+      "enabled": true,
+      "frequency": "weekly",
+      "includePendingItems": true,
+      "includeOverdueItems": true,
+      "includeUpcomingItems": true,
+      "recipients": ["audit-team", "management"]
+    }
+  },
+  "workflow": {
+    "auditStates": ["planned", "in-progress", "completed", "cancelled", "on-hold"],
+    "findingStates": ["open", "in-remediation", "remediated", "closed", "accepted-risk"],
+    "remediationStates": ["planned", "in-progress", "completed", "cancelled", "on-hold"],
+    "requireStateTransitionApproval": false,
+    "allowStateRollback": true,
+    "trackStateHistory": true,
+    "enableWorkflowAutomation": false,
+    "autoTransitionRules": {
+      "enabled": false,
+      "rules": []
+    }
+  },
+  "integration": {
+    "enableComplianceFrameworkSync": true,
+    "enableRiskAssessmentSync": false,
+    "enableTicketingSystemSync": false,
+    "ticketingSystem": "none",
+    "enableDirectoryIntegration": false,
+    "directorySystem": "none",
+    "enableSSOIntegration": false,
+    "ssoProvider": "none",
+    "enableWebhooks": false,
+    "webhookEvents": ["audit.completed", "finding.created", "remediation.completed"],
+    "enableAPIAccess": false,
+    "apiKeyRequired": true
+  },
+  "dataManagement": {
+    "auditDataRetentionDays": 2555,
+    "findingDataRetentionDays": 2555,
+    "remediationDataRetentionDays": 1825,
+    "enableDataArchiving": true,
+    "archiveAfterDays": 365,
+    "enableDataExport": true,
+    "exportFormats": ["json", "csv", "xlsx"],
+    "enableDataImport": false,
+    "importValidation": true,
+    "enableBackup": true,
+    "backupFrequency": "daily",
+    "backupRetentionDays": 90
+  },
+  "security": {
+    "enableAccessControl": true,
+    "roleBasedPermissions": true,
+    "roles": {
+      "auditor": ["read", "create", "update"],
+      "manager": ["read", "create", "update", "approve"],
+      "admin": ["read", "create", "update", "delete", "approve", "configure"]
+    },
+    "enableAuditTrail": true,
+    "auditTrailRetentionDays": 2555,
+    "enableDataEncryption": true,
+    "encryptionAlgorithm": "AES-256",
+    "enableDigitalSignatures": false,
+    "requireSecureTransport": true,
+    "enableTwoFactorAuth": false
+  }
+}

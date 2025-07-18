@@ -1,0 +1,174 @@
+{
+  "engagementTypes": {
+    "gapAssessment": {
+      "id": "gap-assessment",
+      "name": "Gap Assessment",
+      "description": "A gap assessment identifies the differences between your current security posture and your desired compliance framework. We'll pinpoint exactly what you need to adjust to meet industry standards and achieve your compliance goals.",
+      "category": "assessment",
+      "estimatedDuration": "2-4 weeks",
+      "deliverables": [
+        "Gap Analysis Report",
+        "Compliance Roadmap",
+        "Risk Assessment Summary",
+        "Remediation Recommendations"
+      ],
+      "requiredDocuments": [
+        "Current Security Policies",
+        "Existing Controls Documentation",
+        "Risk Register",
+        "Asset Inventory"
+      ],
+      "phases": [
+        {
+          "name": "Planning",
+          "description": "Define scope and objectives"
+        },
+        {
+          "name": "Assessment",
+          "description": "Evaluate current state against framework"
+        },
+        {
+          "name": "Analysis",
+          "description": "Identify gaps and prioritize remediation"
+        },
+        {
+          "name": "Reporting",
+          "description": "Deliver findings and recommendations"
+        }
+      ]
+    },
+    "internalAudit": {
+      "id": "internal-audit",
+      "name": "Internal Audit",
+      "description": "Our internal audit services provide independent, objective assessment and consulting designed to add value and improve your organization's operations. Deliverables will include an Internal Audit Report, any required Non-Conformity Reports (NCRs), and assistance with creating Corrective Action Plans (CAPs) ready to provide to your external auditors.",
+      "category": "audit",
+      "estimatedDuration": "3-6 weeks",
+      "deliverables": [
+        "Internal Audit Report",
+        "Non-Conformity Reports (NCRs)",
+        "Corrective Action Plans (CAPs)",
+        "Management Summary"
+      ],
+      "requiredDocuments": [
+        "Security Policies and Procedures",
+        "Risk Assessment Results",
+        "Previous Audit Reports",
+        "Control Implementation Evidence"
+      ],
+      "phases": [
+        {
+          "name": "Planning",
+          "description": "Define audit scope and methodology"
+        },
+        {
+          "name": "Fieldwork",
+          "description": "Conduct testing and evidence gathering"
+        },
+        {
+          "name": "Analysis",
+          "description": "Evaluate findings and assess control effectiveness"
+        },
+        {
+          "name": "Reporting",
+          "description": "Document findings and create corrective action plans"
+        }
+      ]
+    },
+    "auditPrep": {
+      "id": "audit-prep",
+      "name": "Audit Prep",
+      "description": "Let slackspace help you prepare for your external audit. We can help proactively gather responses and evidence that will be required for your audit. Walk in to your audit knowing your documentation and evidence are ready.",
+      "category": "preparation",
+      "estimatedDuration": "2-3 weeks",
+      "deliverables": [
+        "Evidence Repository",
+        "Response Templates",
+        "Document Organization System",
+        "Readiness Assessment"
+      ],
+      "requiredDocuments": [
+        "Audit Notification Letter",
+        "Previous Audit Reports",
+        "Current Policies and Procedures",
+        "Control Evidence"
+      ],
+      "phases": [
+        {
+          "name": "Planning",
+          "description": "Review audit scope and requirements"
+        },
+        {
+          "name": "Preparation",
+          "description": "Gather and organize evidence"
+        },
+        {
+          "name": "Review",
+          "description": "Validate completeness and quality"
+        },
+        {
+          "name": "Handoff",
+          "description": "Transfer organized materials to client"
+        }
+      ]
+    },
+    "auditFacilitation": {
+      "id": "audit-facilitation",
+      "name": "Audit Facilitation",
+      "description": "Representing an organization to outside auditors is a special skill. Let slackspace represent you to your auditors and know that an experienced champion familiar with your controls is ready to confidently manage the audit engagement to completion. Slackspace will document any findings, NCRs, opportunities for improvement (OFIs) and assist with creating Corrective Action Plans (CAPs)",
+      "category": "facilitation",
+      "estimatedDuration": "4-8 weeks",
+      "deliverables": [
+        "Audit Coordination",
+        "Finding Documentation",
+        "Non-Conformity Reports (NCRs)",
+        "Opportunities for Improvement (OFIs)",
+        "Corrective Action Plans (CAPs)"
+      ],
+      "requiredDocuments": [
+        "Audit Plan",
+        "Evidence Repository",
+        "Control Documentation",
+        "Response Templates"
+      ],
+      "phases": [
+        {
+          "name": "Pre-Audit",
+          "description": "Coordinate with auditors and prepare team"
+        },
+        {
+          "name": "Audit Execution",
+          "description": "Facilitate audit activities and manage responses"
+        },
+        {
+          "name": "Finding Resolution",
+          "description": "Address audit findings and develop corrective actions"
+        },
+        {
+          "name": "Closure",
+          "description": "Complete audit process and implement improvements"
+        }
+      ]
+    }
+  },
+  "engagementSettings": {
+    "defaultEngagementType": "gapAssessment",
+    "allowCustomEngagementTypes": true,
+    "requirePhaseTracking": true,
+    "autoGenerateDeliverables": true,
+    "trackRequiredDocuments": true,
+    "enableStatusReporting": true
+  },
+  "statusOptions": [
+    "planning",
+    "in-progress",
+    "on-hold",
+    "completed",
+    "cancelled"
+  ],
+  "priorityLevels": [
+    "low",
+    "medium",
+    "high",
+    "critical"
+  ]
+}

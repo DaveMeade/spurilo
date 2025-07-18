@@ -1,0 +1,1 @@
+#mongoimport --db $MONGO_INITDB_DATABASE --collection cards /docker-entrypoint-initdb.d/esperanto_cards.json --jsonArray --username $MONGO_INITDB_ROOT_USERNAME --password $MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin

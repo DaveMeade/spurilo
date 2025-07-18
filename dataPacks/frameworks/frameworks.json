@@ -1,0 +1,11 @@
+[
+    {
+        "_id": {
+            "$oid": "6869835ace7f16c6fce84f8b"
+        },
+        "doc_identifier": "CSF_2_0_0",
+        "name": "NIST Cybersecurity Framework",
+        "version": "2.0",
+        "website": "https://www.nist.gov/cyberframework"
+    }
+]

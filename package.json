@@ -1,0 +1,50 @@
+{
+  "name": "spurilo",
+  "version": "0.8.0",
+  "description": "Audit Manager and Evidence Collection",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "concurrently \"docker compose -f ./docker/docker-compose.yml up -d\" \"npm run start:express\" \"npm run dev\"",
+    "start:express": "node src/server.js",
+    "dev": "vite --config config/vite.config.js",
+    "build": "vite build --config config/vite.config.js",
+    "preview": "vite preview --config config/vite.config.js",
+    "stop": "docker compose -f ./docker/docker-compose.yml down --remove-orphans",
+    "clearnode": "rmdir -f node_modules && rm -f package-lock.json && npm install"
+  },
+  "keywords": [
+    "AI",
+    "n8n",
+    "open-webui",
+    "docker"
+  ],
+  "author": "Dave Meade <dave@slackspace.dev> (https://slackpsace.dev/)",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.1.0",
+    "http-proxy-middleware": "^3.0.5",
+    "selfsigned": "^2.4.1",
+    "mongodb": "^6.10.0",
+    "mongoose": "^8.8.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "axios": "^1.7.9",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "passport-microsoft": "^1.0.0",
+    "passport-linkedin-oauth2": "^2.0.0",
+    "express-session": "^1.18.1",
+    "connect-mongo": "^5.1.0",
+    "dotenv": "^16.4.7",
+    "uuid": "^11.0.3"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "@vitejs/plugin-react": "^4.3.3",
+    "vite": "^5.4.11",
+    "tailwindcss": "^3.4.16",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.1"
+  }
+}

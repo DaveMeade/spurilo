@@ -1,0 +1,11 @@
+.env 
+archive/*
+
+# Ignore everything in the data folder
+docker/mongo/data/*
+
+# But don't ignore the .keep file
+!docker/mongo/data/.keep
+
+# Ignore node_modules
+node_modules

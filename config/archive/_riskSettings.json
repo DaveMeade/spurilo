@@ -1,0 +1,262 @@
+{
+  "_metadata": {
+    "description": "Risk assessment system configuration",
+    "version": "1.0.0",
+    "lastUpdated": "2024-07-04",
+    "documentationUrl": "/docs/RiskAssessmentReference.md"
+  },
+  "_comments": {
+    "scoring": "Risk scoring model and calculation settings",
+    "categories": "Risk categorization and classification",
+    "assessment": "Risk assessment workflow configuration",
+    "monitoring": "Risk monitoring and alerting settings"
+  },
+  "scoring": {
+    "model": "quantitative",
+    "availableModels": ["quantitative", "qualitative", "hybrid"],
+    "scale": {
+      "min": 0,
+      "max": 10,
+      "precision": 1
+    },
+    "thresholds": {
+      "critical": 9.0,
+      "high": 7.0,
+      "medium": 5.0,
+      "low": 3.0,
+      "negligible": 1.0
+    },
+    "factors": {
+      "probability": {
+        "weight": 0.5,
+        "scale": {
+          "very_low": 0.1,
+          "low": 0.3,
+          "medium": 0.5,
+          "high": 0.7,
+          "very_high": 0.9
+        }
+      },
+      "impact": {
+        "weight": 0.5,
+        "categories": {
+          "financial": 0.3,
+          "operational": 0.25,
+          "reputational": 0.2,
+          "regulatory": 0.15,
+          "strategic": 0.1
+        },
+        "scale": {
+          "negligible": 1,
+          "minor": 3,
+          "moderate": 5,
+          "major": 7,
+          "severe": 9
+        }
+      }
+    },
+    "autoCalculate": true,
+    "calculationFrequency": "daily",
+    "requireManualReview": false,
+    "allowOverride": true,
+    "trackScoreHistory": true
+  },
+  "categories": {
+    "riskTypes": [
+      "Cybersecurity",
+      "Operational",
+      "Financial",
+      "Compliance",
+      "Strategic",
+      "Reputational",
+      "Technology",
+      "Human Resources",
+      "Supply Chain",
+      "Environmental"
+    ],
+    "riskSources": [
+      "External Threat",
+      "Internal Threat",
+      "System Failure",
+      "Process Failure",
+      "Human Error",
+      "Natural Disaster",
+      "Regulatory Change",
+      "Market Change",
+      "Technology Change",
+      "Vendor Risk"
+    ],
+    "affectedAssets": [
+      "Data",
+      "Systems",
+      "Applications",
+      "Infrastructure",
+      "Personnel",
+      "Facilities",
+      "Reputation",
+      "Intellectual Property",
+      "Financial Assets",
+      "Customer Information"
+    ],
+    "enableCustomCategories": true,
+    "requireCategoryAssignment": true,
+    "allowMultipleCategories": true
+  },
+  "assessment": {
+    "defaultAssessmentMethod": "interview",
+    "availableMethods": ["interview", "questionnaire", "automated", "observation", "document_review"],
+    "assessmentFrequency": "annually",
+    "mandatoryReassessmentTriggers": [
+      "significant_change",
+      "incident_occurrence",
+      "audit_finding",
+      "regulatory_change",
+      "threshold_exceeded"
+    ],
+    "requireEvidence": true,
+    "evidenceTypes": ["document", "interview", "observation", "testing", "analysis"],
+    "requireMultipleAssessors": false,
+    "minimumAssessors": 2,
+    "enablePeerReview": true,
+    "requireManagerApproval": true,
+    "assessmentValidityDays": 365,
+    "enableAssessmentTemplates": true,
+    "allowBulkAssessments": false
+  },
+  "monitoring": {
+    "enableContinuousMonitoring": true,
+    "monitoringFrequency": "daily",
+    "automaticAlerts": true,
+    "alertThresholds": {
+      "newHighRisk": true,
+      "riskScoreIncrease": 2.0,
+      "overdueMitigation": true,
+      "thresholdExceeded": true
+    },
+    "alertRecipients": ["risk-team", "security-team", "management"],
+    "enableTrendAnalysis": true,
+    "trendAnalysisPeriod": 365,
+    "enablePredictiveAnalysis": false,
+    "predictiveModels": ["linear_regression", "time_series"],
+    "enableRiskCorrelation": true,
+    "correlationFactors": ["time", "category", "source", "asset"]
+  },
+  "mitigation": {
+    "requireMitigationPlan": true,
+    "mitigationStrategies": ["accept", "avoid", "mitigate", "transfer"],
+    "defaultStrategy": "mitigate",
+    "requireStrategyJustification": true,
+    "mitigationTimeframes": {
+      "critical": 7,
+      "high": 14,
+      "medium": 30,
+      "low": 60,
+      "negligible": 90
+    },
+    "allowMitigationExtension": true,
+    "maxExtensionDays": 30,
+    "requireExtensionApproval": true,
+    "trackMitigationProgress": true,
+    "requireProgressUpdates": true,
+    "progressUpdateFrequency": 7,
+    "enableMitigationTemplates": true,
+    "autoVerifyMitigation": false,
+    "requireEvidenceOfMitigation": true,
+    "allowPartialMitigation": true
+  },
+  "reporting": {
+    "defaultReportFormat": "pdf",
+    "availableFormats": ["pdf", "html", "csv", "json", "xlsx"],
+    "includeRiskMatrix": true,
+    "includeRiskRegister": true,
+    "includeTrendAnalysis": true,
+    "includeRecommendations": true,
+    "autoGenerateReports": false,
+    "reportSchedule": "monthly",
+    "reportRecipients": ["risk-team", "management", "board"],
+    "customReportTemplates": true,
+    "enableDrillDownReports": true,
+    "reportRetentionDays": 365,
+    "enableRiskDashboard": true,
+    "dashboardRefreshInterval": 300000,
+    "includeRealTimeMetrics": true
+  },
+  "integration": {
+    "enableComplianceFrameworkSync": true,
+    "enableAuditManagementSync": true,
+    "enableIncidentManagementSync": false,
+    "enableThreatIntelligenceSync": false,
+    "enableAssetManagementSync": false,
+    "enableVulnerabilityManagementSync": false,
+    "enableBusinessContinuitySync": false,
+    "enableWebhooks": false,
+    "webhookEvents": ["risk.created", "risk.updated", "risk.mitigated", "threshold.exceeded"],
+    "enableAPIAccess": false,
+    "apiKeyRequired": true,
+    "enableSIEMIntegration": false,
+    "siemSystem": "none"
+  },
+  "dataManagement": {
+    "riskDataRetentionDays": 2555,
+    "assessmentDataRetentionDays": 2555,
+    "mitigationDataRetentionDays": 1825,
+    "enableDataArchiving": true,
+    "archiveAfterDays": 365,
+    "enableDataExport": true,
+    "exportFormats": ["json", "csv", "xlsx"],
+    "enableDataImport": false,
+    "importValidation": true,
+    "enableBackup": true,
+    "backupFrequency": "daily",
+    "backupRetentionDays": 90,
+    "enableDataAnonymization": false,
+    "anonymizeAfterDays": 1825
+  },
+  "security": {
+    "enableAccessControl": true,
+    "roleBasedPermissions": true,
+    "roles": {
+      "analyst": ["read", "create", "update"],
+      "manager": ["read", "create", "update", "approve"],
+      "admin": ["read", "create", "update", "delete", "approve", "configure"]
+    },
+    "enableAuditTrail": true,
+    "auditTrailRetentionDays": 2555,
+    "enableDataEncryption": true,
+    "encryptionAlgorithm": "AES-256",
+    "enableDigitalSignatures": false,
+    "requireSecureTransport": true,
+    "enableTwoFactorAuth": false,
+    "sensitiveDataProtection": true,
+    "enableDataLossPreventDLP": false
+  },
+  "notifications": {
+    "enableEmailNotifications": true,
+    "enableInAppNotifications": true,
+    "enableSlackIntegration": false,
+    "notificationTriggers": {
+      "riskCreated": true,
+      "riskUpdated": false,
+      "riskMitigated": true,
+      "thresholdExceeded": true,
+      "assessmentDue": true,
+      "assessmentOverdue": true,
+      "mitigationDue": true,
+      "mitigationOverdue": true
+    },
+    "escalationNotifications": {
+      "enabled": true,
+      "escalateAfterDays": 7,
+      "escalationRecipients": ["manager", "risk-team"],
+      "maxEscalationLevel": 3
+    },
+    "digestNotifications": {
+      "enabled": true,
+      "frequency": "weekly",
+      "includePendingItems": true,
+      "includeOverdueItems": true,
+      "includeUpcomingItems": true,
+      "recipients": ["risk-team", "management"]
+    }
+  }
+}

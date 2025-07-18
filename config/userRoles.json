@@ -1,0 +1,376 @@
+{
+  "systemRoles": {
+    "admin": {
+      "id": "admin",
+      "name": "System Administrator",
+      "description": "Full platform administration. Can manage all aspects of the system.",
+      "permissions": [
+        "manage_system",
+        "manage_all_users",
+        "manage_all_organizations",
+        "manage_all_engagements",
+        "view_all_data",
+        "configure_system"
+      ]
+    },
+    "auditor": {
+      "id": "auditor",
+      "name": "Auditor",
+      "description": "Consultant role. Can create and manage engagements across organizations.",
+      "permissions": [
+        "create_engagement",
+        "manage_engagements",
+        "view_all_engagements",
+        "manage_findings",
+        "generate_reports"
+      ]
+    }
+  },
+  "organizationRoles": {
+    "manage_engagements": {
+      "id": "manage_engagements",
+      "name": "Engagement Manager",
+      "description": "Can manage engagement settings and participants within their organization.",
+      "permissions": [
+        "view_organization_engagements",
+        "manage_engagement_participants",
+        "view_engagement_reports"
+      ]
+    },
+    "view_reports": {
+      "id": "view_reports",
+      "name": "Report Viewer",
+      "description": "Can view reports across all organization engagements.",
+      "permissions": [
+        "view_organization_reports",
+        "export_reports"
+      ]
+    },
+    "manage_users": {
+      "id": "manage_users",
+      "name": "User Manager",
+      "description": "Can manage users within their organization.",
+      "permissions": [
+        "view_organization_users",
+        "invite_users",
+        "manage_user_roles",
+        "deactivate_users"
+      ]
+    }
+  },
+  "engagementRoles": {
+    "admin": {
+      "id": "admin",
+      "name": "Admin",
+      "description": "Able to create organizations, frameworks, engagements and assign users and roles to the engagement.",
+      "category": "system",
+      "permissions": [
+        "create_engagement",
+        "assign_users",
+        "assign_roles",
+        "manage_system",
+        "view_all_engagements",
+        "edit_engagement",
+        "delete_engagement",
+        "manage_users",
+        "manage_roles",
+        "view_reports",
+        "generate_reports"
+      ],
+      "canManageRoles": ["admin", "auditor", "engagement_owner", "sme", "controlOwner", "manager", "executive"],
+      "accessLevel": "full"
+    },
+    "auditor": {
+      "id": "auditor",
+      "name": "Auditor",
+      "description": "The consulting auditor responsible for completing the engagement",
+      "category": "consultant",
+      "permissions": [
+        "view_engagement",
+        "edit_engagement",
+        "create_findings",
+        "update_findings",
+        "create_interviews",
+        "schedule_meetings",
+        "request_evidence",
+        "update_engagement_phase",
+        "view_reports",
+        "generate_reports",
+        "manage_deliverables"
+      ],
+      "canManageRoles": [],
+      "accessLevel": "engagement"
+    },
+    "owner": {
+      "id": "engagement_owner",
+      "name": "Engagement Owner",
+      "description": "The primary contact at the customer responsible for completing the engagement. Can manage customer users (but not admin or auditors). Can review engagement profiles, dashboard, reports etc.",
+      "category": "customer",
+      "permissions": [
+        "view_engagement",
+        "manage_customer_users",
+        "view_dashboard",
+        "view_reports",
+        "respond_to_requests",
+        "schedule_meetings",
+        "upload_evidence",
+        "view_findings",
+        "create_corrective_actions"
+      ],
+      "canManageRoles": ["sme", "controlOwner", "manager", "executive"],
+      "accessLevel": "customer"
+    },
+    "sme": {
+      "id": "sme",
+      "name": "SME",
+      "description": "A customer subject matter expert. They may receive interview questions or meeting invites from the system.",
+      "category": "customer",
+      "permissions": [
+        "view_engagement",
+        "respond_to_interviews",
+        "attend_meetings",
+        "upload_evidence",
+        "view_assigned_tasks",
+        "respond_to_requests"
+      ],
+      "canManageRoles": [],
+      "accessLevel": "limited"
+    },
+    "controlOwner": {
+      "id": "controlOwner",
+      "name": "Control Owner",
+      "description": "A customer user who owns one or more controls being audited. They may receive interview questions or meeting invites from the system. Control Owners also are required to provide responses or evidence for specific controls.",
+      "category": "customer",
+      "permissions": [
+        "view_engagement",
+        "view_assigned_controls",
+        "respond_to_interviews",
+        "attend_meetings",
+        "upload_evidence",
+        "respond_to_requests",
+        "view_control_findings",
+        "create_corrective_actions"
+      ],
+      "canManageRoles": [],
+      "accessLevel": "control"
+    },
+    "manager": {
+      "id": "manager",
+      "name": "Manager",
+      "description": "A customer management stakeholder. Can view audit event schedules and reports.",
+      "category": "customer",
+      "permissions": [
+        "view_engagement",
+        "view_schedule",
+        "view_reports",
+        "view_dashboard",
+        "view_findings"
+      ],
+      "canManageRoles": [],
+      "accessLevel": "view"
+    },
+    "executive": {
+      "id": "executive",
+      "name": "Executive",
+      "description": "A customer executive stakeholder. Can view audit event schedules and reports.",
+      "category": "customer",
+      "permissions": [
+        "view_engagement",
+        "view_schedule",
+        "view_reports",
+        "view_dashboard",
+        "view_findings",
+        "view_executive_summary"
+      ],
+      "canManageRoles": [],
+      "accessLevel": "executive"
+    }
+  },
+  "_legacy_userRoles": {
+    "_comment": "Original userRoles structure kept for backward compatibility during migration",
+  "roleCategories": {
+    "system": {
+      "name": "System",
+      "description": "System administrators and internal users",
+      "color": "#e74c3c"
+    },
+    "consultant": {
+      "name": "Consultant",
+      "description": "External consultants and auditors",
+      "color": "#3498db"
+    },
+    "customer": {
+      "name": "Customer",
+      "description": "Customer organization users",
+      "color": "#2ecc71"
+    }
+  },
+  "permissions": {
+    "create_engagement": {
+      "name": "Create Engagement",
+      "description": "Create new audit engagements"
+    },
+    "assign_users": {
+      "name": "Assign Users",
+      "description": "Assign users to engagements"
+    },
+    "assign_roles": {
+      "name": "Assign Roles",
+      "description": "Assign roles to users"
+    },
+    "manage_system": {
+      "name": "Manage System",
+      "description": "System administration privileges"
+    },
+    "view_all_engagements": {
+      "name": "View All Engagements",
+      "description": "View all engagements in the system"
+    },
+    "edit_engagement": {
+      "name": "Edit Engagement",
+      "description": "Modify engagement details"
+    },
+    "delete_engagement": {
+      "name": "Delete Engagement",
+      "description": "Remove engagements from the system"
+    },
+    "manage_users": {
+      "name": "Manage Users",
+      "description": "Create, edit, and delete users"
+    },
+    "manage_roles": {
+      "name": "Manage Roles",
+      "description": "Assign and modify user roles"
+    },
+    "view_engagement": {
+      "name": "View Engagement",
+      "description": "View engagement details"
+    },
+    "create_findings": {
+      "name": "Create Findings",
+      "description": "Create audit findings"
+    },
+    "update_findings": {
+      "name": "Update Findings",
+      "description": "Modify audit findings"
+    },
+    "create_interviews": {
+      "name": "Create Interviews",
+      "description": "Schedule interviews with users"
+    },
+    "schedule_meetings": {
+      "name": "Schedule Meetings",
+      "description": "Schedule meetings and events"
+    },
+    "request_evidence": {
+      "name": "Request Evidence",
+      "description": "Request evidence from users"
+    },
+    "update_engagement_phase": {
+      "name": "Update Engagement Phase",
+      "description": "Update engagement phase and status"
+    },
+    "view_reports": {
+      "name": "View Reports",
+      "description": "View audit reports and dashboards"
+    },
+    "generate_reports": {
+      "name": "Generate Reports",
+      "description": "Generate audit reports"
+    },
+    "manage_deliverables": {
+      "name": "Manage Deliverables",
+      "description": "Manage engagement deliverables"
+    },
+    "manage_customer_users": {
+      "name": "Manage Customer Users",
+      "description": "Manage customer organization users"
+    },
+    "view_dashboard": {
+      "name": "View Dashboard",
+      "description": "View engagement dashboard"
+    },
+    "respond_to_requests": {
+      "name": "Respond to Requests",
+      "description": "Respond to auditor requests"
+    },
+    "upload_evidence": {
+      "name": "Upload Evidence",
+      "description": "Upload supporting evidence"
+    },
+    "view_findings": {
+      "name": "View Findings",
+      "description": "View audit findings"
+    },
+    "create_corrective_actions": {
+      "name": "Create Corrective Actions",
+      "description": "Create corrective action plans"
+    },
+    "respond_to_interviews": {
+      "name": "Respond to Interviews",
+      "description": "Participate in interviews"
+    },
+    "attend_meetings": {
+      "name": "Attend Meetings",
+      "description": "Attend scheduled meetings"
+    },
+    "view_assigned_tasks": {
+      "name": "View Assigned Tasks",
+      "description": "View tasks assigned to user"
+    },
+    "view_assigned_controls": {
+      "name": "View Assigned Controls",
+      "description": "View controls assigned to user"
+    },
+    "view_control_findings": {
+      "name": "View Control Findings",
+      "description": "View findings for assigned controls"
+    },
+    "view_schedule": {
+      "name": "View Schedule",
+      "description": "View engagement schedule"
+    },
+    "view_executive_summary": {
+      "name": "View Executive Summary",
+      "description": "View executive-level summaries"
+    }
+  },
+  "accessLevels": {
+    "full": {
+      "name": "Full Access",
+      "description": "Complete system access"
+    },
+    "engagement": {
+      "name": "Engagement Access",
+      "description": "Access to assigned engagements"
+    },
+    "customer": {
+      "name": "Customer Access",
+      "description": "Access to customer organization data"
+    },
+    "control": {
+      "name": "Control Access",
+      "description": "Access to assigned controls"
+    },
+    "limited": {
+      "name": "Limited Access",
+      "description": "Limited access to specific functions"
+    },
+    "view": {
+      "name": "View Access",
+      "description": "Read-only access to reports and schedules"
+    },
+    "executive": {
+      "name": "Executive Access",
+      "description": "Executive-level view access"
+    }
+  },
+  "systemSettings": {
+    "allowMultipleRoles": true,
+    "requireRoleAssignment": true,
+    "defaultRole": "sme",
+    "enableRoleHierarchy": true,
+    "maxRolesPerUser": 5,
+    "enablePermissionInheritance": true
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "_metadata": {
+    "description": "Debug and development configuration settings",
+    "version": "1.0.0",
+    "lastUpdated": "2024-07-04",
+    "documentationUrl": "/docs/README.md"
+  },
+  "_comments": {
+    "logging": "System logging configuration",
+    "testing": "Test environment settings",
+    "performance": "Performance monitoring settings",
+    "features": "Debug-specific feature flags"
+  },
+  "logging": {
+    "level": "info",
+    "systems": {
+      "compliance": true,
+      "audit": true,
+      "risk": true,
+      "reporting": true,
+      "ui": false,
+      "config": false
+    },
+    "showTimestamps": true,
+    "colorCoded": true,
+    "logToFile": false,
+    "logFilePath": "/logs/debug.log",
+    "maxLogSize": 10485760,
+    "logRotation": true
+  },
+  "testing": {
+    "autoRunHealthChecks": true,
+    "healthCheckInterval": 60000,
+    "skipAnimations": false,
+    "useMockData": true,
+    "mockDataPath": "/test-data/",
+    "enableTestMode": false,
+    "testDataGeneration": {
+      "generateSampleAudits": true,
+      "generateSampleFindings": true,
+      "generateSampleRisks": true,
+      "sampleDataCount": 10
+    }
+  },
+  "performance": {
+    "enableMetrics": true,
+    "metricsInterval": 30000,
+    "trackLoadTimes": true,
+    "trackMemoryUsage": true,
+    "trackAPIResponse": true,
+    "enableProfiler": false,
+    "profilerSampleRate": 0.1
+  },
+  "features": {
+    "debugMenuVisible": true,
+    "systemInfoOverlay": false,
+    "configurationEditor": true,
+    "databaseViewer": false,
+    "performanceMonitor": true,
+    "logViewer": false,
+    "enableConsoleCommands": true,
+    "showSystemBoundaries": false
+  },
+  "development": {
+    "enableHotReload": true,
+    "hotReloadPort": 3001,
+    "enableSourceMaps": true,
+    "minifyCode": false,
+    "enableCORS": true,
+    "corsOrigins": ["http://localhost:3000", "http://localhost:8080"],
+    "enableDevTools": true,
+    "showErrorDetails": true
+  },
+  "database": {
+    "showQueries": false,
+    "logSlowQueries": true,
+    "slowQueryThreshold": 1000,
+    "enableQueryCache": false,
+    "validateConstraints": true,
+    "enableTransactionLogging": false
+  },
+  "api": {
+    "enableRequestLogging": true,
+    "logRequestBody": false,
+    "logResponseBody": false,
+    "enableMockAPIs": true,
+    "mockAPIDelay": 500,
+    "enableAPIValidation": true,
+    "strictMode": false
+  },
+  "ui": {
+    "enableComponentBoundaries": false,
+    "showComponentNames": false,
+    "enableReduxDevTools": false,
+    "enableReactDevTools": false,
+    "showRenderMetrics": false,
+    "highlightUpdates": false,
+    "enableAccessibilityChecks": false
+  },
+  "security": {
+    "bypassAuthentication": false,
+    "allowInsecureConnections": true,
+    "disableCSRFProtection": true,
+    "enableSecurityHeaders": false,
+    "logSecurityEvents": true,
+    "enableRateLimiting": false
+  },
+  "notifications": {
+    "enableDesktopNotifications": false,
+    "enableEmailNotifications": false,
+    "enableSlackNotifications": false,
+    "notificationLevel": "warning",
+    "enableDebugNotifications": true
+  },
+  "system": {
+    "enableSystemMonitoring": true,
+    "monitoringInterval": 30000,
+    "enableMemoryProfiling": false,
+    "enableCPUProfiling": false,
+    "enableNetworkMonitoring": false,
+    "enableDiskMonitoring": false,
+    "systemAlertsThreshold": {
+      "memory": 0.8,
+      "cpu": 0.8,
+      "disk": 0.9
+    }
+  }
+}

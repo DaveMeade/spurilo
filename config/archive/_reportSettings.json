@@ -1,0 +1,338 @@
+{
+  "_metadata": {
+    "description": "Report generation system configuration",
+    "version": "1.0.0",
+    "lastUpdated": "2024-07-04",
+    "documentationUrl": "/docs/ReportGenerationReference.md"
+  },
+  "_comments": {
+    "templates": "Report template configuration",
+    "generation": "Report generation settings",
+    "distribution": "Report distribution and delivery settings",
+    "scheduling": "Automated report scheduling"
+  },
+  "templates": {
+    "defaultTemplate": "executive_summary",
+    "availableTemplates": [
+      "executive_summary",
+      "detailed_compliance",
+      "audit_findings",
+      "risk_assessment",
+      "gap_analysis",
+      "remediation_status",
+      "trend_analysis",
+      "custom"
+    ],
+    "templateSettings": {
+      "executive_summary": {
+        "includeSummary": true,
+        "includeMetrics": true,
+        "includeCharts": true,
+        "includeTrends": true,
+        "includeRecommendations": true,
+        "pageLimit": 10,
+        "confidentialityLevel": "restricted"
+      },
+      "detailed_compliance": {
+        "includeAllFrameworks": true,
+        "includeControlDetails": true,
+        "includeEvidence": true,
+        "includeGapAnalysis": true,
+        "includeRemediationPlans": true,
+        "pageLimit": 50,
+        "confidentialityLevel": "confidential"
+      },
+      "audit_findings": {
+        "includeFindingDetails": true,
+        "includeEvidence": true,
+        "includeRemediation": true,
+        "includeTimelines": true,
+        "includeResponsibleParties": true,
+        "pageLimit": 30,
+        "confidentialityLevel": "restricted"
+      },
+      "risk_assessment": {
+        "includeRiskMatrix": true,
+        "includeRiskRegister": true,
+        "includeMitigationPlans": true,
+        "includeTrendAnalysis": true,
+        "includeRecommendations": true,
+        "pageLimit": 25,
+        "confidentialityLevel": "confidential"
+      }
+    },
+    "customTemplateSupport": true,
+    "templateVersioning": true,
+    "enableTemplateLibrary": true,
+    "allowTemplateSharing": false
+  },
+  "generation": {
+    "defaultFormat": "pdf",
+    "availableFormats": ["pdf", "html", "docx", "xlsx", "csv", "json"],
+    "formatSettings": {
+      "pdf": {
+        "pageSize": "A4",
+        "orientation": "portrait",
+        "margin": "standard",
+        "includePageNumbers": true,
+        "includeHeaders": true,
+        "includeFooters": true,
+        "enableBookmarks": true,
+        "enableHyperlinks": true,
+        "compressionLevel": "medium"
+      },
+      "html": {
+        "includeCSS": true,
+        "responsiveDesign": true,
+        "enableInteractivity": true,
+        "includeCharts": true,
+        "enablePrint": true
+      },
+      "docx": {
+        "includeTableOfContents": true,
+        "includeImages": true,
+        "enableTrackChanges": false,
+        "enableComments": false
+      },
+      "xlsx": {
+        "includeCharts": true,
+        "enableFiltering": true,
+        "enablePivotTables": false,
+        "includeFormulas": true
+      }
+    },
+    "maxReportSize": 52428800,
+    "compressionEnabled": true,
+    "parallelGeneration": true,
+    "maxConcurrentReports": 5,
+    "generationTimeout": 300000,
+    "enableProgress": true,
+    "enableCaching": true,
+    "cacheExpiration": 3600000,
+    "enableWatermarks": true,
+    "watermarkText": "CONFIDENTIAL"
+  },
+  "content": {
+    "includeCharts": true,
+    "chartTypes": ["bar", "line", "pie", "gauge", "heatmap"],
+    "chartSettings": {
+      "colorScheme": "corporate",
+      "enableInteractivity": false,
+      "highResolution": true,
+      "includeDataLabels": true,
+      "enableLegend": true
+    },
+    "includeTables": true,
+    "tableSettings": {
+      "enableSorting": false,
+      "enableFiltering": false,
+      "alternateRowColors": true,
+      "includeBorders": true,
+      "compactView": false
+    },
+    "includeImages": true,
+    "imageSettings": {
+      "maxWidth": 800,
+      "maxHeight": 600,
+      "compression": "medium",
+      "enableCaptions": true,
+      "enableResize": true
+    },
+    "includeTimestamps": true,
+    "timestampFormat": "yyyy-MM-dd HH:mm:ss",
+    "includeMetadata": true,
+    "enableFootnotes": true,
+    "enableAppendix": true
+  },
+  "distribution": {
+    "enableEmailDelivery": true,
+    "emailSettings": {
+      "smtpServer": "",
+      "smtpPort": 587,
+      "enableSSL": true,
+      "authentication": true,
+      "senderEmail": "",
+      "senderName": "Compliance System",
+      "subjectTemplate": "Compliance Report - {reportType} - {date}",
+      "bodyTemplate": "Please find attached the compliance report for {period}.",
+      "enableHtmlEmail": true,
+      "enableDeliveryReceipts": true,
+      "enableReadReceipts": false
+    },
+    "enableFTPDelivery": false,
+    "ftpSettings": {
+      "server": "",
+      "port": 21,
+      "username": "",
+      "password": "",
+      "enableSSL": true,
+      "remotePath": "/reports/"
+    },
+    "enableWebhookDelivery": false,
+    "webhookSettings": {
+      "url": "",
+      "method": "POST",
+      "headers": {},
+      "timeout": 30000,
+      "retries": 3
+    },
+    "enableLocalStorage": true,
+    "localStorageSettings": {
+      "path": "/reports/",
+      "organizationStructure": "date",
+      "fileNamingConvention": "{reportType}_{date}_{time}",
+      "enableCompression": true,
+      "retentionDays": 365
+    }
+  },
+  "scheduling": {
+    "enableScheduledReports": true,
+    "defaultSchedule": "monthly",
+    "availableSchedules": ["daily", "weekly", "monthly", "quarterly", "annually"],
+    "scheduleSettings": {
+      "daily": {
+        "time": "06:00",
+        "weekdays": [1, 2, 3, 4, 5],
+        "excludeHolidays": true
+      },
+      "weekly": {
+        "dayOfWeek": 1,
+        "time": "06:00",
+        "excludeHolidays": true
+      },
+      "monthly": {
+        "dayOfMonth": 1,
+        "time": "06:00",
+        "excludeHolidays": true
+      },
+      "quarterly": {
+        "months": [1, 4, 7, 10],
+        "dayOfMonth": 1,
+        "time": "06:00"
+      },
+      "annually": {
+        "month": 1,
+        "dayOfMonth": 1,
+        "time": "06:00"
+      }
+    },
+    "enableCustomSchedules": true,
+    "maxScheduledReports": 50,
+    "enableScheduleNotifications": true,
+    "notificationRecipients": ["admin", "report-manager"],
+    "enableFailureNotifications": true,
+    "retryFailedReports": true,
+    "maxRetries": 3,
+    "retryInterval": 3600000
+  },
+  "recipients": {
+    "defaultRecipientGroups": ["management", "audit-team", "compliance-team"],
+    "recipientGroups": {
+      "management": {
+        "name": "Management Team",
+        "emails": [],
+        "deliveryMethod": "email",
+        "reportFormats": ["pdf"],
+        "reportTypes": ["executive_summary", "risk_assessment"]
+      },
+      "audit-team": {
+        "name": "Audit Team",
+        "emails": [],
+        "deliveryMethod": "email",
+        "reportFormats": ["pdf", "xlsx"],
+        "reportTypes": ["audit_findings", "detailed_compliance"]
+      },
+      "compliance-team": {
+        "name": "Compliance Team",
+        "emails": [],
+        "deliveryMethod": "email",
+        "reportFormats": ["pdf", "xlsx"],
+        "reportTypes": ["detailed_compliance", "gap_analysis"]
+      }
+    },
+    "enableDynamicRecipients": true,
+    "allowRecipientCustomization": true,
+    "requireRecipientApproval": false,
+    "enableRecipientTracking": true,
+    "trackDeliveryStatus": true,
+    "trackOpenStatus": false
+  },
+  "performance": {
+    "enablePerformanceMonitoring": true,
+    "trackGenerationTime": true,
+    "trackDeliveryTime": true,
+    "enablePerformanceAlerts": true,
+    "performanceThresholds": {
+      "generationTime": 300000,
+      "deliveryTime": 60000,
+      "reportSize": 52428800,
+      "queueSize": 10
+    },
+    "enableOptimization": true,
+    "optimizationSettings": {
+      "enableImageOptimization": true,
+      "enableDataOptimization": true,
+      "enableTemplateOptimization": true,
+      "enableCacheOptimization": true
+    },
+    "enableLoadBalancing": false,
+    "maxConcurrentGeneration": 3,
+    "queueSize": 20,
+    "enablePriority": true,
+    "priorityLevels": ["urgent", "high", "normal", "low"]
+  },
+  "security": {
+    "enableAccessControl": true,
+    "roleBasedPermissions": true,
+    "roles": {
+      "viewer": ["read"],
+      "generator": ["read", "create"],
+      "manager": ["read", "create", "update", "approve"],
+      "admin": ["read", "create", "update", "delete", "approve", "configure"]
+    },
+    "enableAuditTrail": true,
+    "auditTrailRetentionDays": 2555,
+    "enableDataEncryption": true,
+    "encryptionAlgorithm": "AES-256",
+    "enableDigitalSignatures": false,
+    "requireSecureTransport": true,
+    "enableTwoFactorAuth": false,
+    "sensitiveDataProtection": true,
+    "enableDataMasking": false,
+    "enableWatermarking": true,
+    "watermarkSettings": {
+      "text": "CONFIDENTIAL",
+      "position": "diagonal",
+      "opacity": 0.3,
+      "color": "#FF0000"
+    }
+  },
+  "integration": {
+    "enableComplianceFrameworkSync": true,
+    "enableAuditManagementSync": true,
+    "enableRiskAssessmentSync": true,
+    "enableBusinessIntelligenceSync": false,
+    "enableSharePointSync": false,
+    "enableConfluenceSync": false,
+    "enableWebhooks": false,
+    "webhookEvents": ["report.generated", "report.delivered", "report.failed"],
+    "enableAPIAccess": false,
+    "apiKeyRequired": true,
+    "enableSSOIntegration": false,
+    "ssoProvider": "none"
+  },
+  "dataManagement": {
+    "reportDataRetentionDays": 1825,
+    "enableDataArchiving": true,
+    "archiveAfterDays": 365,
+    "enableDataExport": true,
+    "exportFormats": ["json", "csv"],
+    "enableDataImport": false,
+    "importValidation": true,
+    "enableBackup": true,
+    "backupFrequency": "daily",
+    "backupRetentionDays": 90,
+    "enableDataAnonymization": false,
+    "anonymizeAfterDays": 1825
+  }
+}
