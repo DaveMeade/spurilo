@@ -29,8 +29,7 @@ const InitialSetup = ({ onAdminCreated }) => {
     try {
       const userData = {
         ...formData,
-        roles: ['admin'],
-        system_roles: ['admin'], // New role structure
+        system_roles: ['admin'], // System admin role
         organization_roles: [],
         status: 'active'
       };

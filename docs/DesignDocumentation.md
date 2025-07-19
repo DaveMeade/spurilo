@@ -70,8 +70,33 @@ Systems communicate through well-defined events:
 Each system maintains its own data store:
 - ComplianceFrameworks: Framework definitions and mappings
 - AuditManagement: Audit schedules, findings, and remediation
+- UserRole: User accounts, roles, and engagement participation
 - RiskAssessment: Risk models and scoring algorithms
 - ReportGeneration: Report templates and generated outputs
+
+### Database Schema Architecture
+The application uses MongoDB with Mongoose schemas that serve as the single source of truth for data structures:
+
+#### Schema Organization
+```
+/src/helpers/schemas/
+├── validators/               # Reusable validation functions
+│   ├── common.validators.js  # Email, URL, phone validations
+│   └── business.validators.js # Business rule validations
+├── organization.schema.js    # Organization entities
+├── user.schema.js           # User accounts and auth
+├── engagement.schema.js     # Engagements and controls
+├── message.schema.js        # Messaging system
+├── role.schema.js          # RBAC schemas
+├── engagementType.schema.js # Engagement configurations
+└── index.js                # Central export point
+```
+
+#### Schema Design Principles
+- **Validation at Database Level**: Business rules enforced through custom validators
+- **Configuration-Driven Limits**: Max values and constraints from configuration files
+- **State Machine Patterns**: Valid transitions for statuses and stages
+- **Cross-Document Validation**: Ensures data consistency across collections
 
 ## Configuration System Design
 
@@ -160,6 +185,26 @@ const mockAuditHelpers = {
 };
 ```
 
+### Schema Validation Testing
+Database schemas include comprehensive validation testing:
+```javascript
+// Test business rule validation
+const engagement = new Engagement({
+    id: 'org123_gap-assessment_2501:v1',
+    status: 'pending'
+});
+
+// Test state transition validation
+engagement.status = 'active'; // Should fail - invalid transition
+engagement.status = 'scheduled'; // Should succeed
+
+// Test cross-field validation
+const timeline = {
+    start_date: new Date('2025-01-01'),
+    end_date: new Date('2024-12-31') // Should fail - end before start
+};
+```
+
 ## Performance Considerations
 
 ### Configuration Caching
@@ -171,6 +216,24 @@ const mockAuditHelpers = {
 - Asynchronous processing for large audit datasets
 - Incremental risk calculations
 - Cached report generation with invalidation triggers
+
+### Database Performance
+Schema optimizations for MongoDB performance:
+- **Compound Indexes**: Optimized for common query patterns
+- **Virtual Fields**: Computed properties that don't consume storage
+- **Lean Queries**: Option to skip hydration for read-only operations
+- **Connection Pooling**: Efficient database connection management
+
+```javascript
+// Example index optimization
+engagementSchema.index({ org: 1, status: 1 });
+engagementSchema.index({ 'participants.user_id': 1 });
+
+// Virtual field example
+userSchema.virtual('fullName').get(function() {
+    return `${this.firstName} ${this.lastName}`;
+});
+```
 
 ## Debugging & Monitoring
 
@@ -202,3 +265,25 @@ Helper interfaces designed for potential API exposure:
 - Webhook support for external integrations
 - Standard data exchange formats
 - Authentication and authorization framework
+
+### Schema Evolution
+Database schemas support evolution over time:
+- **Migration Support**: Schema versioning for safe updates
+- **Backward Compatibility**: Optional fields and graceful degradation
+- **Custom Validators**: Extensible validation framework
+- **Dynamic Fields**: Support for customer-specific data through Maps
+
+```javascript
+// Example of extensible schema design
+const customFieldsSchema = {
+    customFields: {
+        type: Map,
+        of: Schema.Types.Mixed
+    }
+};
+
+// Schema migration example
+schemaSchema.statics.migrate = async function(fromVersion, toVersion) {
+    // Migration logic here
+};
+```

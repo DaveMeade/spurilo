@@ -2,9 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { PlusIcon, EyeIcon, EditIcon, DocumentIcon, UserIcon } from './Icons';
 import CreateEngagementModal from './CreateEngagementModal';
 import EngagementDetails from './EngagementDetails';
+import AccessDenied from './AccessDenied';
 import { apiGet } from '../utils/api';
 
-const AdminDashboard = () => {
+const AdminDashboard = ({ user }) => {
+  // Permission check - only system admins can access this dashboard
+  const hasAdminAccess = user?.system_roles?.includes('admin');
+  
+  if (!hasAdminAccess) {
+    return <AccessDenied user={user} requiredRole="System Administrator" />;
+  }
   const [engagements, setEngagements] = useState([]);
   const [filteredEngagements, setFilteredEngagements] = useState([]);
   const [statusFilter, setStatusFilter] = useState(null);

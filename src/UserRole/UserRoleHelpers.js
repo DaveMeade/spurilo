@@ -375,6 +375,22 @@ class UserRoleHelpers {
         
         return await this.manager.healthCheck();
     }
+
+    /**
+     * Create organization
+     */
+    async createOrganization(orgData) {
+        await this.ensureInitialized();
+        return await this.manager.createOrganization(orgData);
+    }
+
+    /**
+     * Get organization
+     */
+    async getOrganization(organizationId) {
+        await this.ensureInitialized();
+        return await this.manager.getOrganization(organizationId);
+    }
 }
 
 // Create singleton instance

@@ -15,8 +15,34 @@ A comprehensive project tracker application focused on auditing cyber security a
 |--------|---------|---------------|---------------|
 | ComplianceFrameworks | Manage security frameworks (NIST, ISO 27001, SOC 2) | [ComplianceFrameworksReference.md](ComplianceFrameworksReference.md) | appSettings.json |
 | AuditManagement | Track audit schedules, findings, and remediation | [AuditManagementReference.md](AuditManagementReference.md) | auditSettings.json |
+| UserRole | Manage users, roles, and engagement participation | [UserRoleReference.md](UserRoleReference.md) | userRoles.json |
 | RiskAssessment | Evaluate and score security risks | [RiskAssessmentReference.md](RiskAssessmentReference.md) | riskSettings.json |
 | ReportGeneration | Generate compliance reports and dashboards | [ReportGenerationReference.md](ReportGenerationReference.md) | reportSettings.json |
+
+## Database Schemas
+
+The application uses MongoDB with Mongoose schemas that enforce data integrity and business rules at the database level.
+
+### Schema Organization
+- **Location**: `/src/helpers/schemas/`
+- **Central Import**: `const { User, Organization, Engagement } = require('./helpers/schemas');`
+- **Documentation**: Schema definitions align with `/docs/exampleJSON.jsonc`
+
+### Available Schemas
+| Schema | Purpose | Key Validations |
+|--------|---------|-----------------|
+| Organization | Customer organizations | Domain validation, status transitions |
+| User | User accounts and authentication | Email domain matching, role compatibility |
+| Engagement | Audit engagements | ID format, timeline consistency |
+| EngagementControlProfile | Control assessments | Status transitions, evidence validation |
+| Message | Communication system | Mention extraction, read tracking |
+| Roles & Permissions | RBAC system | Permission inheritance, role assignments |
+
+### Schema Features
+- **Business Rule Validation**: Enforces state transitions, role compatibility, and data relationships
+- **Configuration-Driven Limits**: Max participants, role counts, etc. controlled by configuration
+- **Smart Defaults**: Auto-generates IDs, timestamps, and computed fields
+- **Performance Optimization**: Proper indexes for common queries
 
 ## Configuration System
 - **Master Configuration**: `/config/appSettings.json` - Core application settings
@@ -38,6 +64,9 @@ A comprehensive project tracker application focused on auditing cyber security a
 ComplianceFrameworks → AuditManagement → RiskAssessment → ReportGeneration
                     ↓                    ↓                ↓
                 Framework Data      Audit Findings    Risk Scores
+                                         ↑
+                                    UserRole System
+                              (Participants & Permissions)
 ```
 
 ## Making Changes & Contributions
@@ -63,6 +92,25 @@ ComplianceFrameworks → AuditManagement → RiskAssessment → ReportGeneration
 - `ConfigManager.set(path, value)` - Update configuration at runtime
 - `SystemHelper.healthCheck()` - Validate system status
 - `SystemHelper.getInterface()` - Get system's external interface
+
+### Database Schema Usage
+```javascript
+// Import schemas and models
+const { User, Organization, Engagement } = require('./helpers/schemas');
+
+// Initialize schemas on startup
+const { initializeSchemas } = require('./helpers/schemas');
+await initializeSchemas();
+
+// Create documents with validation
+const user = new User({
+    email: 'user@company.com',
+    firstName: 'Jane',
+    lastName: 'Doe',
+    organizationId: 'org-123'
+});
+await user.save();
+```
 
 ### Configuration Paths
 - `systems.compliance.frameworks` - Available compliance frameworks

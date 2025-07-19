@@ -24,7 +24,7 @@ const spuriloApp = express();
 
 // MongoDB Connection
 const mongoUri = process.env.MONGODB_URI || 'mongodb://root:example@localhost:27017/spurilo?authSource=admin';
-console.log('Attempting to connect to MongoDB:', mongoUri.replace(///[^:]+:[^@]+@/, '//***:***@'));
+console.log('Attempting to connect to MongoDB:', mongoUri.replace(/\/\/[^:]+:[^@]+@/, '//***:***@'));
 
 mongoose.connect(mongoUri, {
     serverSelectionTimeoutMS: 5000,
@@ -41,7 +41,7 @@ mongoose.connect(mongoUri, {
         console.error('\n⚠️  MongoDB is not running. Please run: docker compose -f ./docker/docker-compose.yml up -d');
     } else if (error.message.includes('Authentication failed')) {
         console.error('\n⚠️  MongoDB authentication failed. Check credentials.');
-        console.error('Using URI:', mongoUri.replace(///[^:]+:[^@]+@/, '//***:***@'));
+        console.error('Using URI:', mongoUri.replace(/\/\/[^:]+:[^@]+@/, '//***:***@'));
     }
 });
 
@@ -101,6 +101,18 @@ try {
 // Authentication routes
 spuriloApp.use('/auth', authRoutes);
 console.log('✅ Authentication routes configured');
+
+// Admin API routes
+import * as adminOrgApi from './api/admin-organizations-api.js';
+
+// Admin organization endpoints
+spuriloApp.get('/api/admin/organizations', adminOrgApi.requireAdmin, adminOrgApi.listOrganizations);
+spuriloApp.get('/api/admin/organizations/:id', adminOrgApi.requireAdmin, adminOrgApi.getOrganization);
+spuriloApp.post('/api/admin/organizations', adminOrgApi.requireAdmin, adminOrgApi.createOrganization);
+spuriloApp.put('/api/admin/organizations/:id', adminOrgApi.requireAdmin, adminOrgApi.updateOrganization);
+spuriloApp.get('/api/admin/organizations/:id/users', adminOrgApi.requireAdmin, adminOrgApi.getOrganizationUsers);
+spuriloApp.get('/api/admin/organizations/:id/engagements', adminOrgApi.requireAdmin, adminOrgApi.getOrganizationEngagements);
+console.log('✅ Admin organization routes configured');
 
 // API Routes
 spuriloApp.get('/api/system/status', async (req, res) => {
@@ -166,7 +178,7 @@ spuriloApp.get('/api/test/raw-mongo', async (req, res) => {
       success: true,
       database: db.databaseName,
       collections: collections.map(c => c.name),
-      uri: uri.replace(///[^:]+:[^@]+@/, '//***:***@')
+      uri: uri.replace(/\/\/[^:]+:[^@]+@/, '//***:***@')
     });
   } catch (error) {
     res.status(500).json({
@@ -247,14 +259,35 @@ spuriloApp.post('/api/users', async (req, res) => {
     }
     
     const { userRoleHelpers } = await import('./UserRole/UserRoleHelpers.js');
+    
+    // Generate userId early so we can use it for organization creation
+    const userId = `user-${Date.now()}`;
+    
+    // First, create the organization if this is an admin user
+    let organizationId = null;
+    if (req.body.system_roles?.includes('admin') && req.body.organization) {
+      const orgData = {
+        name: req.body.organization,
+        industry: req.body.industry || '',
+        createdBy: userId, // Use the userId we're about to create
+        status: 'active'
+      };
+      
+      console.log('Creating organization:', orgData);
+      const org = await userRoleHelpers.createOrganization(orgData);
+      organizationId = org.organizationId;
+      console.log('Created organization:', org.name, 'with ID:', organizationId);
+    }
+    
     const userData = {
+      userId: userId, // Provide the userId explicitly
       email: req.body.email,
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       organization: req.body.organization || 'Default Organization',
+      organizationId: organizationId, // Link to created organization
       title: req.body.title || '',
-      roles: req.body.roles || ['admin'], // Legacy field for compatibility
-      system_roles: req.body.system_roles || (req.body.roles?.includes('admin') ? ['admin'] : []),
+      system_roles: req.body.system_roles || [],
       organization_roles: req.body.organization_roles || [],
       status: 'active'
     };
@@ -276,7 +309,7 @@ spuriloApp.post('/api/users', async (req, res) => {
       firstName: user.firstName,
       lastName: user.lastName,
       organization: user.organization,
-      roles: user.roles,
+      organizationId: user.organizationId,
       system_roles: user.system_roles,
       organization_roles: user.organization_roles,
       createdDate: user.createdDate
@@ -344,7 +377,7 @@ spuriloApp.get('/api/users', requireAuth, async (req, res) => {
   try {
     const { userRoleHelpers } = await import('./UserRole/UserRoleHelpers.js');
     const { role } = req.query;
-    
+
     let users;
     if (role) {
       // Get users by specific role
@@ -353,7 +386,7 @@ spuriloApp.get('/api/users', requireAuth, async (req, res) => {
       // Get all users
       users = await userRoleHelpers.getAllUsers();
     }
-    
+
     // Return sanitized user data
     const sanitizedUsers = users.map(user => ({
       userId: user.userId,
@@ -366,7 +399,7 @@ spuriloApp.get('/api/users', requireAuth, async (req, res) => {
       organization_roles: user.organization_roles,
       status: user.status
     }));
-    
+
     res.json(sanitizedUsers);
   } catch (error) {
     console.error('Failed to get users:', error);

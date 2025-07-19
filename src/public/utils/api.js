@@ -88,3 +88,42 @@ export const apiPut = (path, data, options = {}) => {
 export const apiDelete = (path, options = {}) => {
   return apiCall(path, { ...options, method: 'DELETE' });
 };
+
+/**
+ * Enhanced API fetch function that handles JSON responses and errors
+ * @param {string} path - The API path
+ * @param {object} options - Fetch options including method, body, etc.
+ * @returns {Promise<any>} - Parsed JSON response
+ */
+export const fetchAPI = async (path, options = {}) => {
+  let apiOptions = { ...options };
+  
+  // If body is provided and method is not GET, stringify it
+  if (apiOptions.body && typeof apiOptions.body === 'object') {
+    apiOptions.body = JSON.stringify(apiOptions.body);
+  }
+  
+  const response = await apiCall(path, apiOptions);
+  
+  // Handle different response types
+  if (!response.ok) {
+    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+    
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorData.message || errorMessage;
+    } catch {
+      // If JSON parsing fails, use the default error message
+    }
+    
+    throw new Error(errorMessage);
+  }
+  
+  // Handle empty responses
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return await response.json();
+  }
+  
+  return null;
+};

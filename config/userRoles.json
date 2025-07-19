@@ -27,6 +27,12 @@
     }
   },
   "organizationRoles": {
+    "pending": {
+      "id": "pending",
+      "name": "Pending User",
+      "description": "User awaiting role assignment. No permissions granted.",
+      "permissions": []
+    },
     "manage_engagements": {
       "id": "manage_engagements",
       "name": "Engagement Manager",
@@ -186,8 +192,6 @@
       "accessLevel": "executive"
     }
   },
-  "_legacy_userRoles": {
-    "_comment": "Original userRoles structure kept for backward compatibility during migration",
   "roleCategories": {
     "system": {
       "name": "System",

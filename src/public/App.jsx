@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
+import SidebarMenu from './components/SidebarMenu';
 import InitialSetup from './components/InitialSetup';
 import OAuthSetup from './components/OAuthSetup';
 import AdminDashboard from './components/AdminDashboard';
 import EngagementDetails from './components/EngagementDetails';
 import NoAccess from './components/NoAccess';
+import OrganizationsList from './components/admin/OrganizationsList';
+import OrganizationDetails from './components/admin/OrganizationDetails';
+import CreateOrganization from './components/admin/CreateOrganization';
 import { apiGet } from './utils/api';
 
 function App() {
@@ -15,6 +20,7 @@ function App() {
   const [currentView, setCurrentView] = useState('dashboard');
   const [selectedEngagement, setSelectedEngagement] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     checkInitializationStatus();
@@ -92,8 +98,9 @@ function App() {
       return true;
     }
     
-    // Check organization roles
-    if (user.organization_roles?.length > 0) {
+    // Check organization roles (exclude 'pending')
+    const activeOrgRoles = user.organization_roles?.filter(role => role !== 'pending') || [];
+    if (activeOrgRoles.length > 0) {
       console.log('User has organization-level access');
       return true;
     }
@@ -155,29 +162,64 @@ function App() {
   // Check if authenticated user has access
   if (isAuthenticated && user && !hasAccess(user)) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header user={user} />
-        <NoAccess user={user} />
-      </div>
+      <Router>
+        <div className="min-h-screen bg-gray-50">
+          <Header user={user} onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
+          <NoAccess user={user} />
+        </div>
+      </Router>
     );
   }
 
-  // Main application
+  // Main application with routing
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header user={user} />
-      
-      {currentView === 'dashboard' && (
-        <AdminDashboard onViewEngagement={handleViewEngagement} />
-      )}
-
-      {currentView === 'engagement-details' && selectedEngagement && (
-        <EngagementDetails
-          engagement={selectedEngagement}
-          onClose={handleCloseEngagementDetails}
+    <Router>
+      <div className="min-h-screen bg-gray-50">
+        <Header user={user} onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
+        
+        <SidebarMenu 
+          isOpen={isSidebarOpen} 
+          onClose={() => setIsSidebarOpen(false)} 
+          user={user} 
         />
-      )}
-    </div>
+        
+        <Routes>
+          {/* Admin Routes */}
+          <Route path="/admin/organizations" element={
+            user?.system_roles?.includes('admin') ? <OrganizationsList /> : <Navigate to="/" />
+          } />
+          <Route path="/admin/organizations/new" element={
+            user?.system_roles?.includes('admin') ? <CreateOrganization /> : <Navigate to="/" />
+          } />
+          <Route path="/admin/organizations/:organizationId" element={
+            user?.system_roles?.includes('admin') ? <OrganizationDetails /> : <Navigate to="/" />
+          } />
+          
+          {/* Main Routes */}
+          <Route path="/dashboard" element={
+            <AdminDashboard user={user} onViewEngagement={handleViewEngagement} />
+          } />
+          <Route path="/engagements" element={
+            <AdminDashboard user={user} onViewEngagement={handleViewEngagement} />
+          } />
+          <Route path="/engagements/:engagementId" element={
+            selectedEngagement ? (
+              <EngagementDetails
+                engagement={selectedEngagement}
+                onClose={handleCloseEngagementDetails}
+              />
+            ) : (
+              <Navigate to="/engagements" />
+            )
+          } />
+          
+          {/* Default Route */}
+          <Route path="/" element={
+            <Navigate to="/dashboard" replace />
+          } />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 

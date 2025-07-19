@@ -19,11 +19,10 @@ const userSchema = new mongoose.Schema({
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     organization: { type: String, required: true },
+    organizationId: { type: String }, // Reference to organization document
     department: { type: String },
     title: { type: String },
     phone: { type: String },
-    // Deprecated: Moving to system_roles and organization_roles
-    roles: [{ type: String }],
     // New role structure
     system_roles: [{ type: String }], // Platform-wide roles: admin, auditor
     organization_roles: [{ type: String }], // Organization-wide roles: manage_engagements, view_reports, manage_users
@@ -72,8 +71,9 @@ const organizationSchema = new mongoose.Schema({
     size: { type: String, enum: ['startup', 'small', 'medium', 'large', 'enterprise'] },
     settings: {
         allowSelfRegistration: { type: Boolean, default: false },
-        defaultUserRole: { type: String, default: 'sme' },
-        requireApproval: { type: Boolean, default: true }
+        defaultOrganizationRole: { type: String, default: 'pending' }, // organizationRoles.pending
+        requireApproval: { type: Boolean, default: true },
+        defaultEngagementRole: { type: String, default: 'sme' } // engagementRoles.sme for when users join engagements
     },
     createdBy: { type: String, required: true },
     createdDate: { type: Date, default: Date.now },
@@ -246,15 +246,23 @@ class UserRoleManager {
                 this.log('Using default role definitions');
             }
                 
-            // Load role definitions
-            Object.values(roleData.userRoles).forEach(role => {
-                this.roleDefinitions.set(role.id, role);
+            // Load role definitions from new structure
+            const roleCategories = ['systemRoles', 'organizationRoles', 'engagementRoles'];
+            
+            roleCategories.forEach(category => {
+                if (roleData[category]) {
+                    Object.values(roleData[category]).forEach(role => {
+                        this.roleDefinitions.set(role.id, role);
+                    });
+                }
             });
             
             // Load permissions
-            Object.entries(roleData.permissions).forEach(([key, permission]) => {
-                this.permissions.set(key, permission);
-            });
+            if (roleData.permissions) {
+                Object.entries(roleData.permissions).forEach(([key, permission]) => {
+                    this.permissions.set(key, permission);
+                });
+            }
                 
         } catch (error) {
             console.error('Failed to load role definitions:', error);
@@ -269,10 +277,16 @@ class UserRoleManager {
         try {
             const userId = userData.userId || `user-${Date.now()}`;
             
-            // Validate roles
-            const validRoles = userData.roles?.filter(role => this.roleDefinitions.has(role)) || ['sme'];
-            if (validRoles.length === 0) {
-                validRoles.push('sme'); // Default role
+            // Validate roles - use new role structure
+            const systemRoles = userData.system_roles || [];
+            const organizationRoles = userData.organization_roles || [];
+            
+            // Legacy support: if old roles field is provided, map to new structure
+            const legacyRoles = userData.roles || [];
+            
+            // If no roles provided at all, assign pending role
+            if (systemRoles.length === 0 && organizationRoles.length === 0 && legacyRoles.length === 0) {
+                organizationRoles.push('pending'); // Default to pending role
             }
 
             const user = new this.users({
@@ -281,10 +295,12 @@ class UserRoleManager {
                 firstName: userData.firstName,
                 lastName: userData.lastName,
                 organization: userData.organization,
+                organizationId: userData.organizationId || null,
                 department: userData.department || '',
                 title: userData.title || '',
                 phone: userData.phone || '',
-                roles: validRoles,
+                system_roles: systemRoles,
+                organization_roles: organizationRoles,
                 engagements: [],
                 preferences: userData.preferences || {},
                 status: userData.status || 'active',
@@ -352,7 +368,23 @@ class UserRoleManager {
                 throw new Error('At least one valid role must be assigned');
             }
 
-            user.roles = [...new Set([...user.roles, ...validRoles])]; // Merge and deduplicate
+            // Add roles to appropriate arrays based on role type
+            validRoles.forEach(role => {
+                const roleDef = this.roleDefinitions.get(role);
+                if (!roleDef) return;
+                
+                // Determine role category and add to appropriate array
+                if (['admin', 'auditor'].includes(role)) {
+                    if (!user.system_roles.includes(role)) {
+                        user.system_roles.push(role);
+                    }
+                } else if (['manage_engagements', 'view_reports', 'manage_users', 'pending'].includes(role)) {
+                    if (!user.organization_roles.includes(role)) {
+                        user.organization_roles.push(role);
+                    }
+                }
+            });
+            
             user.lastUpdated = new Date();
             await user.save();
 
@@ -374,11 +406,19 @@ class UserRoleManager {
                 throw new Error(`User not found: ${userId}`);
             }
 
-            user.roles = user.roles.filter(role => !roles.includes(role));
+            // Remove roles from appropriate arrays
+            roles.forEach(role => {
+                if (user.system_roles.includes(role)) {
+                    user.system_roles = user.system_roles.filter(r => r !== role);
+                }
+                if (user.organization_roles.includes(role)) {
+                    user.organization_roles = user.organization_roles.filter(r => r !== role);
+                }
+            });
             
             // Ensure at least one role remains
-            if (user.roles.length === 0) {
-                user.roles = ['sme']; // Default role
+            if (user.system_roles.length === 0 && user.organization_roles.length === 0) {
+                user.organization_roles = ['pending']; // Default role
             }
 
             user.lastUpdated = new Date();
@@ -548,7 +588,15 @@ class UserRoleManager {
      */
     async getUsersByRole(role) {
         try {
-            return await this.users.find({ roles: role });
+            // Check in all role fields for backwards compatibility
+            return await this.users.find({
+                $or: [
+                    { system_roles: role },
+                    { organization_roles: role },
+                    { 'engagements.roles': role },
+                    { roles: role } // Legacy support for migration
+                ]
+            });
         } catch (error) {
             console.error('Failed to get users by role:', error);
             throw error;
@@ -612,7 +660,11 @@ class UserRoleManager {
             const user = await this.getUser(userId);
             if (!user) return false;
 
-            let rolesToCheck = user.roles;
+            // Combine all user roles
+            let rolesToCheck = [
+                ...(user.system_roles || []),
+                ...(user.organization_roles || [])
+            ];
 
             // If checking for engagement-specific permission, use engagement roles
             if (engagementId) {
@@ -719,6 +771,53 @@ class UserRoleManager {
                 initialized: this.initialized,
                 error: error.message
             };
+        }
+    }
+
+    /**
+     * Create organization
+     */
+    async createOrganization(orgData) {
+        try {
+            const organizationId = orgData.organizationId || `org-${Date.now()}`;
+            
+            // Set default settings with new role structure
+            const defaultSettings = {
+                allowSelfRegistration: false,
+                defaultOrganizationRole: 'pending', // organizationRoles.pending
+                requireApproval: true,
+                defaultEngagementRole: 'sme' // engagementRoles.sme
+            };
+            
+            const organization = new this.organizations({
+                organizationId: organizationId,
+                name: orgData.name,
+                domain: orgData.domain || '',
+                industry: orgData.industry || '',
+                size: orgData.size || 'medium', // Default to medium if not specified
+                settings: { ...defaultSettings, ...(orgData.settings || {}) },
+                createdBy: orgData.createdBy || 'system', // Required field
+                status: orgData.status || 'active'
+            });
+
+            await organization.save();
+            this.log(`Created organization: ${organization.name} (${organizationId})`);
+            return organization;
+        } catch (error) {
+            console.error('Failed to create organization:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get organization by ID
+     */
+    async getOrganization(organizationId) {
+        try {
+            return await this.organizations.findOne({ organizationId: organizationId });
+        } catch (error) {
+            console.error('Failed to get organization:', error);
+            throw error;
         }
     }
 

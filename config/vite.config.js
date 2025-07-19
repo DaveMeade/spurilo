@@ -8,6 +8,9 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url))
 export default defineConfig({
   plugins: [react()],
   root: resolve(__dirname, '../src/public'),
+  css: {
+    postcss: resolve(__dirname, 'postcss.config.js')
+  },
   build: {
     outDir: resolve(__dirname, '../dist'),
     emptyOutDir: true

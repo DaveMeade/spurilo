@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { SearchIcon, UserIcon, ChevronDownIcon, CogIcon, LogoutIcon } from './Icons';
+import { SearchIcon, UserIcon, ChevronDownIcon, CogIcon, LogoutIcon, Menu } from './Icons';
 
-const Header = ({ user }) => {
+const Header = ({ user, onMenuToggle }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -67,8 +67,14 @@ const Header = ({ user }) => {
     <header className="bg-white shadow-sm border-b border-secondary-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Left: Product Name */}
-          <div className="flex-shrink-0">
+          {/* Left: Menu Button and Product Name */}
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={onMenuToggle}
+              className="p-2 rounded-md text-secondary-600 hover:text-secondary-900 hover:bg-secondary-50 transition-colors"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
             <h1 className="text-2xl font-bold text-primary-700">
               Spurilo
             </h1>
