@@ -7,9 +7,9 @@
   "scripts": {
     "start": "concurrently \"docker compose -f ./docker/docker-compose.yml up -d\" \"npm run start:express\" \"npm run dev\"",
     "start:express": "node src/server.js",
-    "dev": "vite --config config/vite.config.js",
-    "build": "vite build --config config/vite.config.js",
-    "preview": "vite preview --config config/vite.config.js",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "stop": "docker compose -f ./docker/docker-compose.yml down --remove-orphans",
     "clearnode": "rmdir -f node_modules && rm -f package-lock.json && npm install"
   },

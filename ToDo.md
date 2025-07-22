@@ -1,5 +1,9 @@
 # Project To-Do List
 
+**IMPORTANT** Notice to AI Agents: This file can only be actioned if:
+1) There are no open issues in /bugs/open/ - All open bugs must be complete before actioning this file. AND
+2) There is no remaining tasks listed in current-workplan.md. All in process work must be completed before this file can be actioned.
+
 ## High Priority Features
 
 ### Core System Implementation

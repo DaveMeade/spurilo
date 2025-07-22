@@ -5,9 +5,8 @@ import { fileURLToPath } from 'url';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import dotenv from 'dotenv';
-import mongoose from 'mongoose';
-import { configurePassport } from '../config/passport-config.js';
-import authRoutes, { requireAuth } from './auth/auth-routes.js';
+import { configurePassport } from './config/passport.config.js';
+import authRoutes, { requireAuth } from './routes/auth.routes.js';
 import passport from 'passport';
 
 // Load environment variables
@@ -22,28 +21,7 @@ const __dirname = path.dirname(__filename);
 // --- Main Spurilo Application ---
 const spuriloApp = express();
 
-// MongoDB Connection
-const mongoUri = process.env.MONGODB_URI || 'mongodb://root:example@localhost:27017/spurilo?authSource=admin';
-console.log('Attempting to connect to MongoDB:', mongoUri.replace(/\/\/[^:]+:[^@]+@/, '//***:***@'));
-
-mongoose.connect(mongoUri, {
-    serverSelectionTimeoutMS: 5000,
-    socketTimeoutMS: 45000,
-}).then(() => {
-    console.log('✅ Connected to MongoDB');
-    console.log('MongoDB connection state:', mongoose.connection.readyState);
-}).catch((error) => {
-    console.error('❌ MongoDB connection error:', error.message);
-    console.error('Error code:', error.code);
-    console.error('Error name:', error.name);
-    console.error('Full error:', error);
-    if (error.message.includes('ECONNREFUSED')) {
-        console.error('\n⚠️  MongoDB is not running. Please run: docker compose -f ./docker/docker-compose.yml up -d');
-    } else if (error.message.includes('Authentication failed')) {
-        console.error('\n⚠️  MongoDB authentication failed. Check credentials.');
-        console.error('Using URI:', mongoUri.replace(/\/\/[^:]+:[^@]+@/, '//***:***@'));
-    }
-});
+// Database connection is now handled by dbManager
 
 // CORS configuration for development
 spuriloApp.use((req, res, next) => {
@@ -73,13 +51,7 @@ spuriloApp.use(session({
   secret: process.env.SESSION_SECRET || 'fallback-secret-change-this',
   resave: false,
   saveUninitialized: false,
-  // TODO: Fix MongoDB permissions for session store
-  // store: MongoStore.create({
-  //   mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/spurilo',
-  //   touchAfter: 24 * 3600,
-  //   connectTimeoutMS: 5000,
-  //   socketTimeoutMS: 5000
-  // }),
+  // Session store uses memory store for now
   cookie: {
     secure: false, // Set to false for development
     httpOnly: true,
@@ -103,7 +75,7 @@ spuriloApp.use('/auth', authRoutes);
 console.log('✅ Authentication routes configured');
 
 // Admin API routes
-import * as adminOrgApi from './api/admin-organizations-api.js';
+import * as adminOrgApi from './api/admin/organizations.api.js';
 
 // Admin organization endpoints
 spuriloApp.get('/api/admin/organizations', adminOrgApi.requireAdmin, adminOrgApi.listOrganizations);
@@ -119,7 +91,7 @@ spuriloApp.get('/api/system/status', async (req, res) => {
   try {
     // Check if any admin users exist
     console.log('System status check - importing userRoleHelpers...');
-    const { userRoleHelpers } = await import('./UserRole/UserRoleHelpers.js');
+    const { userRoleHelpers } = await import('./user-role/user.role.helpers.js');
     
     console.log('System status check - checking if helpers initialized...');
     if (!userRoleHelpers.initialized) {
@@ -145,40 +117,39 @@ spuriloApp.get('/api/system/status', async (req, res) => {
   } catch (error) {
     console.error('Error checking system status:', error.message);
     console.error('Full error:', error);
-    console.error('Mongoose connection state:', mongoose.connection.readyState);
-    console.error('Mongoose connection states: 0=disconnected, 1=connected, 2=connecting, 3=disconnecting');
+    
+    // Check dbManager status instead of mongoose directly
+    const { dbManager } = await import('./database/db-manager.js');
+    const dbHealth = await dbManager.healthCheck();
+    
     res.json({ 
       hasAdminUser: false,
       isAuthenticated: false,
       user: null,
       error: 'Database connection issue',
       details: error.message,
-      mongoState: mongoose.connection.readyState
+      dbHealth: dbHealth
     });
   }
 });
 
-// Raw MongoDB connection test
+// Database connection test using dbManager
 spuriloApp.get('/api/test/raw-mongo', async (req, res) => {
-  const { MongoClient } = await import('mongodb');
-  const uri = process.env.MONGODB_URI || 'mongodb://root:example@localhost:27017/spurilo?authSource=admin';
-  
   try {
-    const client = new MongoClient(uri, {
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 5000
-    });
+    const { dbManager } = await import('./database/db-manager.js');
     
-    await client.connect();
-    const db = client.db();
-    const collections = await db.listCollections().toArray();
-    await client.close();
+    if (!dbManager.initialized) {
+      await dbManager.initialize();
+    }
+    
+    const collections = await dbManager.listCollections();
+    const health = await dbManager.healthCheck();
     
     res.json({
       success: true,
-      database: db.databaseName,
+      database: health.database,
       collections: collections.map(c => c.name),
-      uri: uri.replace(/\/\/[^:]+:[^@]+@/, '//***:***@')
+      connectionState: health.mongoState
     });
   } catch (error) {
     res.status(500).json({
@@ -190,53 +161,38 @@ spuriloApp.get('/api/test/raw-mongo', async (req, res) => {
   }
 });
 
-// Simple MongoDB test endpoint
+// MongoDB test endpoint using dbManager
 spuriloApp.get('/api/test/mongo', async (req, res) => {
   try {
-    const state = mongoose.connection.readyState;
-    const stateText = ['disconnected', 'connected', 'connecting', 'disconnecting'][state];
+    const { dbManager } = await import('./database/db-manager.js');
+    const health = await dbManager.healthCheck();
     
-    if (state === 1) {
-      // Try a simple database operation
-      const collections = await mongoose.connection.db.listCollections().toArray();
-      res.json({
-        status: 'connected',
-        state: state,
-        stateText: stateText,
-        database: mongoose.connection.db.databaseName,
-        collections: collections.map(c => c.name),
-        uri: mongoUri.replace(/\/\/[^:]+:[^@]+@/, '//***:***@') // Hide credentials
-      });
-    } else {
-      res.status(503).json({
-        status: 'not connected',
-        state: state,
-        stateText: stateText,
-        error: 'MongoDB is not connected'
-      });
-    }
+    res.json({
+      ...health,
+      lastCheck: new Date().toISOString()
+    });
   } catch (error) {
     res.status(500).json({
       status: 'error',
       error: error.message,
-      stack: error.stack
+      stack: error.stack,
+      lastCheck: new Date().toISOString()
     });
   }
 });
 
 spuriloApp.get('/api/health/mongo', async (req, res) => {
   try {
-    const mongoose = (await import('mongoose')).default;
-    const isConnected = mongoose.connection.readyState === 1;
+    const { dbManager } = await import('./database/db-manager.js');
+    const health = await dbManager.healthCheck();
     
     res.json({ 
-      connected: isConnected,
-      readyState: mongoose.connection.readyState,
-      readyStateText: ['disconnected', 'connected', 'connecting', 'disconnecting'][mongoose.connection.readyState],
+      ...health,
       lastCheck: new Date().toISOString()
     });
   } catch (error) {
     res.json({ 
+      status: 'error',
       connected: false,
       error: error.message,
       lastCheck: new Date().toISOString()
@@ -248,59 +204,73 @@ spuriloApp.post('/api/users', async (req, res) => {
   try {
     console.log('POST /api/users - Request received:', req.body);
     
-    // Check MongoDB connection first
-    if (mongoose.connection.readyState !== 1) {
-      console.error('MongoDB not connected. State:', mongoose.connection.readyState);
+    // Import and initialize the database manager (handles connection internally)
+    const { dbManager } = await import('./database/db-manager.js');
+    
+    if (!dbManager.initialized) {
+      await dbManager.initialize();
+    }
+    
+    // Check if dbManager is ready
+    const health = await dbManager.healthCheck();
+    if (health.status !== 'healthy') {
+      console.error('DbManager not healthy:', health);
       return res.status(503).json({ 
-        error: 'Database not connected',
-        message: 'MongoDB is not connected. Please ensure the database is running.',
-        mongoState: mongoose.connection.readyState
+        error: 'Database not ready',
+        message: 'Database manager is not healthy. Please ensure MongoDB is running.',
+        health: health
       });
     }
     
-    const { userRoleHelpers } = await import('./UserRole/UserRoleHelpers.js');
-    
-    // Generate userId early so we can use it for organization creation
-    const userId = `user-${Date.now()}`;
-    
-    // First, create the organization if this is an admin user
-    let organizationId = null;
-    if (req.body.system_roles?.includes('admin') && req.body.organization) {
-      const orgData = {
-        name: req.body.organization,
-        industry: req.body.industry || '',
-        createdBy: userId, // Use the userId we're about to create
-        status: 'active'
-      };
-      
-      console.log('Creating organization:', orgData);
-      const org = await userRoleHelpers.createOrganization(orgData);
-      organizationId = org.organizationId;
-      console.log('Created organization:', org.name, 'with ID:', organizationId);
-    }
-    
     const userData = {
-      userId: userId, // Provide the userId explicitly
+      userId: `user-${Date.now()}`, // Generate userId
       email: req.body.email,
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       organization: req.body.organization || 'Default Organization',
-      organizationId: organizationId, // Link to created organization
       title: req.body.title || '',
       system_roles: req.body.system_roles || [],
       organization_roles: req.body.organization_roles || [],
       status: 'active'
     };
     
-    console.log('Creating user with data:', userData);
+    let organization = null;
     
-    // Add timeout to prevent hanging
-    const createUserPromise = userRoleHelpers.createUser(userData);
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Database timeout')), 10000)
-    );
+    // For admin users, handle organization creation/lookup with proper domain checking
+    if (req.body.system_roles?.includes('admin') && req.body.organization) {
+      const orgData = {
+        name: req.body.organization,
+        status: 'active',
+        createdBy: userData.userId
+      };
+      
+      console.log('Finding or creating organization for admin user...');
+      
+      // Use the new dbManager method that properly handles domain checking
+      organization = await dbManager.findOrCreateOrganizationByDomain(userData, orgData);
+      userData.organizationId = organization.id;
+      
+      console.log('Organization resolved:', organization.name, 'with ID:', organization.id);
+    } else {
+      // For non-admin users, still check if organization exists by domain
+      console.log('Checking for existing organization by domain...');
+      organization = await dbManager.findOrganizationByDomain(userData.email);
+      
+      if (organization) {
+        userData.organizationId = organization.id;
+        userData.organization = organization.name;
+        console.log('Found existing organization:', organization.name);
+      } else {
+        // No organization found - user will be created without organizationId for now
+        console.log('No organization found for domain, user will be created without organization link');
+        userData.organizationId = null;
+      }
+    }
     
-    const user = await Promise.race([createUserPromise, timeoutPromise]);
+    console.log('Creating user with validated data:', userData);
+    
+    // Create user with proper schema validation
+    const user = await dbManager.createUser(userData);
     console.log('Created user successfully:', user.firstName, user.lastName);
     
     res.json({
@@ -325,26 +295,14 @@ spuriloApp.post('/api/users', async (req, res) => {
   }
 });
 
-// Test user creation without UserRoleHelpers
+// Test user creation using dbManager
 spuriloApp.post('/api/test/create-user', async (req, res) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ error: 'Database not connected' });
-    }
+    const { dbManager } = await import('./database/db-manager.js');
     
-    // Direct mongoose operation
-    const User = mongoose.models.User || mongoose.model('User', new mongoose.Schema({
-      userId: { type: String, required: true, unique: true },
-      email: { type: String, required: true, unique: true },
-      firstName: String,
-      lastName: String,
-      organization: String,
-      roles: [String],
-      system_roles: [String],
-      organization_roles: [String],
-      status: String,
-      createdDate: { type: Date, default: Date.now }
-    }));
+    if (!dbManager.initialized) {
+      await dbManager.initialize();
+    }
     
     const userData = {
       userId: `user-${Date.now()}`,
@@ -352,18 +310,16 @@ spuriloApp.post('/api/test/create-user', async (req, res) => {
       firstName: req.body.firstName || 'Test',
       lastName: req.body.lastName || 'User',
       organization: req.body.organization || 'Test Org',
-      roles: ['admin'],
       system_roles: ['admin'],
       organization_roles: [],
       status: 'active'
     };
     
-    const user = new User(userData);
-    await user.save();
+    const user = await dbManager.createUser(userData);
     
-    res.json({ success: true, user: userData });
+    res.json({ success: true, user: user });
   } catch (error) {
-    console.error('Direct user creation error:', error);
+    console.error('DbManager user creation error:', error);
     res.status(500).json({ 
       error: 'Failed to create user',
       message: error.message,
@@ -375,7 +331,7 @@ spuriloApp.post('/api/test/create-user', async (req, res) => {
 // Get users endpoint
 spuriloApp.get('/api/users', requireAuth, async (req, res) => {
   try {
-    const { userRoleHelpers } = await import('./UserRole/UserRoleHelpers.js');
+    const { userRoleHelpers } = await import('./user-role/user.role.helpers.js');
     const { role } = req.query;
 
     let users;
@@ -519,7 +475,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 console.log('Starting Spurilo server...');
-console.log('MongoDB URI:', process.env.MONGODB_URI || 'mongodb://root:example@localhost:27017/spurilo?authSource=admin');
+// MongoDB connection is now handled by dbManager
 
 const spuriloServer = http.createServer(spuriloApp);
 

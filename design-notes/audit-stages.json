@@ -1,0 +1,363 @@
+{
+  "phases": [
+    {
+      "id": "client-onboarding",
+      "name": "Client Onboarding",
+      "description": "The initial phase for establishing contact, gathering essential information, and setting the stage for the engagement.",
+      "stages": [
+        {
+          "id": "introduction-call",
+          "name": "Introduction Call",
+          "description": "Initial meeting to align on key personnel and communication protocols.",
+          "steps": [
+            {
+              "id": "introduce-key-players",
+              "name": "Introduce key players from the consulting and client teams."
+            },
+            {
+              "id": "identify-primary-contact",
+              "name": "Identify the Client's Primary Contact for the engagement."
+            },
+            {
+              "id": "confirm-recipients",
+              "name": "Discuss and confirm who should receive planning updates, status reports, and final deliverables."
+            },
+            {
+              "id": "schedule-kick-off",
+              "name": "Schedule the official Audit Kick-Off call."
+            }
+          ]
+        },
+        {
+          "id": "information-gathering",
+          "name": "Information Gathering",
+          "description": "Collecting preliminary documentation to understand the client's environment.",
+          "steps": [
+            {
+              "id": "deliver-questionnaire",
+              "name": "Deliver the Client Business Questionnaire to gather critical information about the client organization's business objectives, environment, and preliminary audit scope."
+            },
+            {
+              "id": "request-documentation",
+              "name": "Request key organizational charts, process documentation, and prior audit deliverables."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pre-kick-off",
+      "name": "Pre Kick-Off",
+      "description": "Internal planning and client coordination before the official start of the audit.",
+      "stages": [
+        {
+          "id": "internal-planning-scoping",
+          "name": "Internal Planning & Scoping",
+          "description": "Developing the audit plan and initial request lists.",
+          "steps": [
+            {
+              "id": "complete-engagement-profile",
+              "name": "Complete the internal Engagement Control and Requirements Profile based on the client questionnaire and initial discussions."
+            },
+            {
+              "id": "develop-initial-irl",
+              "name": "Develop the initial Information Request List (IRL) based on the defined scope including expected due dates."
+            }
+          ]
+        },
+        {
+          "id": "client-coordination",
+          "name": "Client Coordination",
+          "description": "Aligning with the client on requests and preparing for the kick-off meeting.",
+          "steps": [
+            {
+              "id": "deliver-draft-irl",
+              "name": "Deliver the draft IRL to the Client's Primary Contact to give them a heads-up on required evidence."
+            },
+            {
+              "id": "schedule-pre-kick-off-touchpoint",
+              "name": "Schedule brief pre-kick-off touchpoint with the Client's Primary Contact and key client personnel as needed to assign owners to IRL items."
+            },
+            {
+              "id": "finalize-kick-off-deck",
+              "name": "Finalize the Kick-Off presentation deck with the Client's Primary Contact."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audit-kick-off",
+      "name": "Audit Kick-Off",
+      "description": "The formal start of the engagement with all stakeholders.",
+      "stages": [
+        {
+          "id": "kick-off-meeting",
+          "name": "Kick-Off Meeting",
+          "description": "A formal meeting to align all stakeholders on the engagement's scope, timeline, and processes.",
+          "steps": [
+            {
+              "id": "conduct-formal-kick-off",
+              "name": "Conduct the formal Kick-Off meeting with all relevant client stakeholders."
+            },
+            {
+              "id": "present-scope-timeline",
+              "name": "Present and confirm the final engagement scope, objectives, methodology, and timeline."
+            },
+            {
+              "id": "explain-evidence-collection",
+              "name": "Explain the evidence/response collection process and timeframes for the engagement."
+            },
+            {
+              "id": "reiterate-communication-plan",
+              "name": "Reiterate the communication plan, including the cadence for status meetings and format for updates."
+            },
+            {
+              "id": "answer-client-questions",
+              "name": "Answer any questions from the client team."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "post-kick-off",
+      "name": "Post Kick-Off",
+      "description": "Scheduling detailed follow-up meetings after the initial kick-off.",
+      "stages": [
+        {
+          "id": "schedule-sme-meetings",
+          "name": "Schedule SME meetings",
+          "description": "Arranging interviews and walkthroughs with subject matter experts.",
+          "steps": [
+            {
+              "id": "schedule-interviews-demos",
+              "name": "Schedule meetings for interviews, demos, walkthroughs etc with SME in key areas including: Change Management and BCP/DR."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fieldwork-execution",
+      "name": "Fieldwork & Execution",
+      "description": "The core phase of evidence collection, testing, and analysis.",
+      "stages": [
+        {
+          "id": "daily-morning",
+          "name": "Daily - Morning",
+          "description": "Morning routine for processing updates and setting the day's agenda.",
+          "steps": [
+            {
+              "id": "process-new-submissions-morning",
+              "name": "Process any new submissions (at least set to ‘pending’ to acknowledge receipt)."
+            },
+            {
+              "id": "address-inbound-messages-morning",
+              "name": "Address any inbound messages or questions."
+            },
+            {
+              "id": "schedule-discussions-morning",
+              "name": "Schedule any requested or needed discussions."
+            },
+            {
+              "id": "send-morning-status",
+              "name": "Send morning status summaries to Control / task Owners: any status updates on previously submitted responses, and summary of open items with due dates."
+            }
+          ]
+        },
+        {
+          "id": "daily-afternoon",
+          "name": "Daily - Afternoon",
+          "description": "Afternoon activities focused on meetings and substantive testing.",
+          "steps": [
+            {
+              "id": "hold-sme-meetings",
+              "name": "Hold SME and control owner meetings as scheduled."
+            },
+            {
+              "id": "review-submissions-and-test",
+              "name": "Review Client Submissions and Perform testing of controls, systems, and processes according to the audit plan; documenting all test procedures, evidence reviewed, results, and preliminary observations in the tracker."
+            }
+          ]
+        },
+        {
+          "id": "daily-wrap-up",
+          "name": "Daily - Wrap-up",
+          "description": "End-of-day routine for final processing and summary reporting.",
+          "steps": [
+            {
+              "id": "process-new-submissions-wrapup",
+              "name": "Process any new submissions (at least set to ‘pending’ to acknowledge receipt)."
+            },
+            {
+              "id": "address-inbound-messages-wrapup",
+              "name": "Address any inbound messages or questions."
+            },
+            {
+              "id": "schedule-discussions-wrapup",
+              "name": "Schedule any requested or needed discussions."
+            },
+            {
+              "id": "send-daily-wrapup-summary",
+              "name": "Send daily wrap-up summaries to Auditor & Customer Primary Contact: Overview of fieldwork progress, approaching or missed deadlines, tracked issue updates, possible findings, etc."
+            }
+          ]
+        },
+        {
+          "id": "daily-constant-automated",
+          "name": "Daily - constant / automated",
+          "description": "Ongoing automated processes.",
+          "steps": [
+            {
+              "id": "client-submission-via-tracker",
+              "name": "Client submission of responses/evidence via tracker."
+            }
+          ]
+        },
+        {
+          "id": "weekly",
+          "name": "Weekly",
+          "description": "Weekly recurring status meetings and reporting.",
+          "steps": [
+            {
+              "id": "hold-weekly-status-meeting",
+              "name": "Hold status meetings with the Client Primary Contact."
+            },
+            {
+              "id": "provide-weekly-status-report",
+              "name": "Provide weekly status report detailing: Completed tasks, Upcoming activities, Open IRL items, Identified risks or roadblocks."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "finding-development-validation",
+      "name": "Finding Development & Validation",
+      "description": "Drafting, confirming, and getting management responses for all identified findings.",
+      "stages": [
+        {
+          "id": "finding-development-validation-stage",
+          "name": "Finding Development & Validation",
+          "description": "The process of formalizing and validating audit findings with stakeholders.",
+          "steps": [
+            {
+              "id": "draft-preliminary-findings",
+              "name": "Draft preliminary findings and observations based on testing results."
+            },
+            {
+              "id": "hold-validation-sessions",
+              "name": "Hold validation sessions with control/process owners to confirm the factual accuracy of each finding."
+            },
+            {
+              "id": "request-management-responses",
+              "name": "Request formal management responses for each validated finding, to include a remediation plan and target completion date."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reporting-deliverables",
+      "name": "Reporting & Deliverables",
+      "description": "Creating and delivering the final audit report.",
+      "stages": [
+        {
+          "id": "draft-report-creation",
+          "name": "Draft Report Creation",
+          "description": "Consolidating findings into a draft report and performing internal review.",
+          "steps": [
+            {
+              "id": "consolidate-findings",
+              "name": "Consolidate all validated findings, management responses, and supporting analysis into the draft audit report."
+            },
+            {
+              "id": "define-report-structure",
+              "name": "The report should include an executive summary, background, scope, methodology, and a detailed findings section."
+            },
+            {
+              "id": "conduct-internal-peer-review",
+              "name": "Conduct an internal peer review of the draft report to ensure quality, clarity, and accuracy."
+            }
+          ]
+        },
+        {
+          "id": "client-review-finalization",
+          "name": "Client Review & Finalization",
+          "description": "Working with the client to finalize the report.",
+          "steps": [
+            {
+              "id": "deliver-draft-report",
+              "name": "Deliver the draft report to the Client's Primary Contact for management review."
+            },
+            {
+              "id": "walkthrough-draft-report",
+              "name": "Schedule a meeting to walk through the draft report, discuss findings, and address any questions or concerns."
+            },
+            {
+              "id": "incorporate-corrections",
+              "name": "Incorporate any factual corrections or clarifications from the client and finalize the report."
+            }
+          ]
+        },
+        {
+          "id": "final-report-delivery",
+          "name": "Final Report Delivery",
+          "description": "Formally delivering the final report and closing the engagement.",
+          "steps": [
+            {
+              "id": "deliver-final-report",
+              "name": "Deliver the final, approved audit report to all designated stakeholders."
+            },
+            {
+              "id": "conduct-closing-meeting",
+              "name": "Conduct a formal Closing Meeting to present the final report, summarize key results, and discuss next steps."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "engagement-wrap-up-closure",
+      "name": "Engagement Wrap-Up & Closure",
+      "description": "Post-engagement follow-up and internal administrative closure.",
+      "stages": [
+        {
+          "id": "post-engagement-activities",
+          "name": "Post-Engagement Activities",
+          "description": "Following up with the client on remediation efforts.",
+          "steps": [
+            {
+              "id": "schedule-follow-up",
+              "name": "Schedule a follow-up (e.g., 3-6 months post-engagement) to check on the status of management's remediation efforts."
+            },
+            {
+              "id": "remain-available",
+              "name": "Remain available to provide clarification on findings as the client works on remediation."
+            }
+          ]
+        },
+        {
+          "id": "internal-close-out",
+          "name": "Internal Close-Out",
+          "description": "Finalizing all internal records and processes for the engagement.",
+          "steps": [
+            {
+              "id": "archive-workpapers",
+              "name": "Archive all engagement workpapers, evidence, reports, and communications in the firm's records management system."
+            },
+            {
+              "id": "conduct-post-mortem",
+              "name": "Conduct an internal project post-mortem to identify lessons learned and opportunities for process improvement."
+            },
+            {
+              "id": "finalize-billing",
+              "name": "Finalize and close out all engagement billing and administrative tasks."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
