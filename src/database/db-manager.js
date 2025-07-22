@@ -182,15 +182,42 @@ class SimpleDbManager {
                 return organization;
             }
             
-            // Create new organization with domain
+            // Generate organization ID from name
+            const baseId = orgData.name
+                .toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+                .trim()
+                .replace(/\s+/g, '-') // Replace spaces with hyphens
+                .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+                .slice(0, 50); // Limit length
+            
+            // Ensure ID is unique
+            let uniqueId = baseId;
+            let counter = 1;
+            let existing = await this.findOrganizationById(uniqueId);
+            
+            while (existing) {
+                uniqueId = `${baseId}-${counter}`;
+                existing = await this.findOrganizationById(uniqueId);
+                counter++;
+                
+                // Safety check to prevent infinite loop
+                if (counter > 1000) {
+                    uniqueId = `${baseId}-${Date.now()}`;
+                    break;
+                }
+            }
+            
+            // Create new organization with generated ID and domain
             const newOrgData = {
                 ...orgData,
+                id: uniqueId, // Use generated unique ID
                 org_domains: [domain], // Add the domain to the organization
                 createdBy: userData.userId || userData.email
             };
             
             organization = await this.createOrganization(newOrgData);
-            console.log(`Created new organization for domain ${domain}:`, organization.name);
+            console.log(`Created new organization for domain ${domain}:`, organization.name, 'with ID:', organization.id);
             return organization;
             
         } catch (error) {
@@ -334,7 +361,52 @@ class SimpleDbManager {
                 throw new Error(`Organization not found: ${id}`);
             }
             
-            Object.assign(organization, updateData);
+            // Special handling for ID changes
+            if (updateData.id && updateData.id !== organization.id) {
+                // Ensure new ID is unique
+                let newId = updateData.id;
+                let counter = 1;
+                let existing = await this.Organization.findOne({ id: newId });
+                
+                while (existing && existing._id.toString() !== organization._id.toString()) {
+                    newId = `${updateData.id}-${counter}`;
+                    existing = await this.Organization.findOne({ id: newId });
+                    counter++;
+                    
+                    // Safety check
+                    if (counter > 1000) {
+                        newId = `${updateData.id}-${Date.now()}`;
+                        break;
+                    }
+                }
+                
+                organization.id = newId;
+                console.log('Updated organization ID to:', newId);
+            }
+            
+            // Only update fields that are actually provided and different
+            Object.keys(updateData).forEach(key => {
+                if (updateData[key] !== undefined && key !== 'id') { // Skip ID since we handled it above
+                    // Special handling for nested objects
+                    if (key === 'aka_names' && typeof updateData[key] === 'object') {
+                        // Merge aka_names fields
+                        organization.aka_names = {
+                            ...organization.aka_names.toObject(),
+                            ...updateData.aka_names
+                        };
+                    } else if (key === 'settings' && typeof updateData[key] === 'object') {
+                        // Merge settings fields
+                        organization.settings = {
+                            ...organization.settings.toObject(),
+                            ...updateData.settings
+                        };
+                    } else if (key !== 'status' || updateData[key] !== organization.status) {
+                        // Only update status if it's actually changing
+                        organization[key] = updateData[key];
+                    }
+                }
+            });
+            
             organization.lastUpdated = new Date();
             await organization.save();
             
@@ -461,6 +533,34 @@ class SimpleDbManager {
             return await db.listCollections().toArray();
         } catch (error) {
             console.error('Failed to list collections:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get users by organization ID
+     */
+    async getUsersByOrganizationId(organizationId) {
+        this.ensureInitialized();
+        
+        try {
+            return await this.User.find({ organizationId: organizationId });
+        } catch (error) {
+            console.error('Failed to get users by organization ID:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get engagements by organization ID
+     */
+    async getEngagementsByOrganizationId(organizationId) {
+        this.ensureInitialized();
+        
+        try {
+            return await this.Engagement.find({ org: organizationId });
+        } catch (error) {
+            console.error('Failed to get engagements by organization ID:', error);
             throw error;
         }
     }

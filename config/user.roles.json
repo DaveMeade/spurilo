@@ -33,6 +33,24 @@
       "description": "User awaiting role assignment. No permissions granted.",
       "permissions": []
     },
+    "admin": {
+      "id": "admin",
+      "name": "Organization Administrator",
+      "description": "Full organization administration. Can manage all aspects of the organization.",
+      "permissions": [
+        "*"
+      ]
+    },      
+    "primary_contact": {        
+      "id": "primary_contact",
+      "name": "Primary Contact",
+      "description": "The primary contact at the organization.",
+      "permissions": [
+        "respond_to_requests",
+        "schedule_meetings"
+      ],
+      "default_role_ids": ["contact"]
+    },    
     "manage_engagements": {
       "id": "manage_engagements",
       "name": "Engagement Manager",

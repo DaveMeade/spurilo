@@ -8,8 +8,9 @@
   "_comments": {
     "app": "Core application configuration",
     "systems": "Individual system configurations",
-    "ui": "User interface and experience settings",
-    "features": "Feature flags for enabling/disabling functionality"
+    "ui": "User interface and experience settings", 
+    "features": "Feature flags for enabling/disabling functionality",
+    "userManagement": "User role management, caching, and initialization settings"
   },
   "app": {
     "name": "Cyber Security Compliance Auditing Tracker",
@@ -19,8 +20,13 @@
     "apiEndpoint": "http://localhost:8000",
     "dataRetentionDays": 2555,
     "autoSave": true,
-    "autoSaveInterval": 30000
-  },
+    "autoSaveInterval": 30000,
+    "externalCRM": {
+      "link": "https://slackspace.capsulecrm.com/",
+      "add-org": "https://slackspace.capsulecrm.com/party/organisation/new",
+      "add-person": "https://slackspace.capsulecrm.com/party/person/new",
+      "add-project": "https://slackspace.capsulecrm.com/project/new"
+    },
   "systems": {
     "compliance": {
       "defaultFramework": "NIST",
@@ -40,6 +46,23 @@
       "allowExternalAuditors": true,
       "requireEvidenceUpload": true,
       "autoAssignFindings": false
+    },
+    "userManagement": {
+      "_description": "User role management system configuration for caching and initialization",
+      "enableRoleCaching": true,
+      "_enableRoleCaching_comment": "Enable/disable caching of admin user queries to reduce database load",
+      "adminUserCacheTTL": 30000,
+      "_adminUserCacheTTL_comment": "Time-to-live for admin user cache in milliseconds (30000 = 30 seconds)",
+      "roleQueryTimeout": 5000,
+      "_roleQueryTimeout_comment": "Database query timeout for role operations in milliseconds",
+      "enableStartupInitialization": true,
+      "_enableStartupInitialization_comment": "Initialize user role helpers during server startup (recommended)",
+      "maxRoleInitAttempts": 3,
+      "_maxRoleInitAttempts_comment": "Maximum attempts to initialize user role system on startup",
+      "roleInitRetryInterval": 2000,
+      "_roleInitRetryInterval_comment": "Milliseconds to wait between initialization retry attempts",
+      "noAdminCacheTTL": 5000,
+      "_noAdminCacheTTL_comment": "Shorter cache TTL when no admin users exist to speed up detection of new admins"
     }
   },
   "ui": {

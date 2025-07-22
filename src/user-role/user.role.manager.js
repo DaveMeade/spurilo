@@ -56,13 +56,21 @@ class UserRoleManager {
     async loadRoleConfigurations() {
         try {
             // Load from config file
-            const configPath = path.join(__dirname, '../../config/userRoles.json');
+            const configPath = path.join(__dirname, '../../config/user.roles.json');
             const configData = await fs.promises.readFile(configPath, 'utf8');
             this.roleConfig = JSON.parse(configData);
             
-            // Build role permissions map
-            Object.entries(this.roleConfig.roles).forEach(([category, roles]) => {
-                Object.entries(roles).forEach(([roleId, roleData]) => {
+            // Build role permissions map for the new structure
+            // Handle systemRoles
+            if (this.roleConfig.systemRoles) {
+                Object.entries(this.roleConfig.systemRoles).forEach(([roleId, roleData]) => {
+                    this.rolePermissions.set(roleId, new Set(roleData.permissions || []));
+                });
+            }
+            
+            // Handle organizationRoles
+            if (this.roleConfig.organizationRoles) {
+                Object.entries(this.roleConfig.organizationRoles).forEach(([roleId, roleData]) => {
                     this.rolePermissions.set(roleId, new Set(roleData.permissions || []));
                     
                     // Handle default role mappings
@@ -72,22 +80,31 @@ class UserRoleManager {
                         });
                     }
                 });
-            });
+            }
+            
+            // Handle engagementRoles
+            if (this.roleConfig.engagementRoles) {
+                Object.entries(this.roleConfig.engagementRoles).forEach(([roleId, roleData]) => {
+                    this.rolePermissions.set(roleId, new Set(roleData.permissions || []));
+                });
+            }
             
             this.log('Role configurations loaded successfully');
         } catch (error) {
             console.error('Failed to load role configurations:', error);
             // Use default minimal configuration
             this.roleConfig = {
-                roles: {
-                    system: {
-                        admin: { permissions: ['*'] },
-                        auditor: { permissions: ['view_all_engagements'] }
-                    },
-                    engagement: {
-                        customer: {},
-                        consultant: {}
-                    }
+                systemRoles: {
+                    admin: { permissions: ['*'] },
+                    auditor: { permissions: ['view_all_engagements'] }
+                },
+                organizationRoles: {
+                    admin: { permissions: ['*'] },
+                    primary_contact: { permissions: ['respond_to_requests'] }
+                },
+                engagementRoles: {
+                    customer: {},
+                    consultant: {}
                 }
             };
         }

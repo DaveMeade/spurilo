@@ -7,7 +7,10 @@ const OrganizationDetails = () => {
   const { organizationId } = useParams();
   const [organization, setOrganization] = useState(null);
   const [users, setUsers] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [engagements, setEngagements] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [roleConfig, setRoleConfig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('details');
@@ -22,14 +25,47 @@ const OrganizationDetails = () => {
     try {
       setLoading(true);
       
+      // Load current user info
+      const statusResponse = await fetchAPI('/api/system/status');
+      setCurrentUser(statusResponse.user);
+      
       // Load organization details
       const orgData = await fetchAPI(`/api/admin/organizations/${organizationId}`);
       setOrganization(orgData);
       setEditedOrg(orgData);
       
-      // Load users
+      // Load organization users
       const usersData = await fetchAPI(`/api/admin/organizations/${organizationId}/users`);
+      
+      // Load system admins separately using the user role helper
+      let systemAdmins = [];
+      try {
+        const adminUsers = await fetchAPI('/api/users?role=admin');
+        // Filter out admins who are already in the organization users list
+        systemAdmins = adminUsers.filter(user => 
+          !usersData.some(orgUser => orgUser.userId === user.userId)
+        );
+      } catch (err) {
+        console.warn('Could not load system admin users:', err);
+      }
+      
+      // Combine org users with system admins
+      const combinedUsers = [
+        ...usersData.map(user => ({ ...user, userType: 'organization' })),
+        ...systemAdmins.map(user => ({ ...user, userType: 'system_admin' }))
+      ];
+      
       setUsers(usersData);
+      setAllUsers(combinedUsers);
+      
+      // Load role configuration for name mapping
+      try {
+        // This endpoint might not exist yet, so we'll handle gracefully
+        const roles = await fetchAPI('/api/config/user-roles').catch(() => null);
+        setRoleConfig(roles);
+      } catch (roleErr) {
+        console.warn('Could not load role configuration');
+      }
       
       // Load engagements
       const engagementsData = await fetchAPI(`/api/admin/organizations/${organizationId}/engagements`);
@@ -43,12 +79,26 @@ const OrganizationDetails = () => {
 
   const handleSave = async () => {
     try {
+      // Check if ID is being changed and user is admin
+      let updateData = { ...editedOrg };
+      
+      if (currentUser?.system_roles?.includes('admin') && editedOrg?.id !== organizationId) {
+        // ID is being changed by an admin - the backend will handle uniqueness
+        console.log('Admin is changing organization ID from', organizationId, 'to', editedOrg.id);
+      }
+      
       const updated = await fetchAPI(`/api/admin/organizations/${organizationId}`, {
         method: 'PUT',
-        body: editedOrg
+        body: updateData
       });
+      
       setOrganization(updated);
       setIsEditing(false);
+      
+      // If ID was changed, we might need to redirect to the new URL
+      if (updated.id !== organizationId) {
+        window.location.href = `/admin/organizations/${updated.id}`;
+      }
     } catch (err) {
       alert('Failed to update organization: ' + err.message);
     }
@@ -73,6 +123,27 @@ const OrganizationDetails = () => {
         {status}
       </span>
     );
+  };
+
+  // Map role ID to display name
+  const getRoleName = (roleId, roleType = 'organization') => {
+    // Default role names if config isn't loaded
+    const defaultNames = {
+      admin: 'Administrator',
+      primary_contact: 'Primary Contact',
+      manage_engagements: 'Engagement Manager',
+      view_reports: 'Report Viewer',
+      manage_users: 'User Manager',
+      pending: 'Pending User',
+      auditor: 'Auditor'
+    };
+    
+    if (roleConfig) {
+      const roles = roleType === 'system' ? roleConfig.systemRoles : roleConfig.organizationRoles;
+      return roles?.[roleId]?.name || defaultNames[roleId] || roleId;
+    }
+    
+    return defaultNames[roleId] || roleId;
   };
 
   if (loading) {
@@ -120,7 +191,7 @@ const OrganizationDetails = () => {
         <nav className="-mb-px flex space-x-8">
           {[
             { id: 'details', label: 'Details', icon: Building2Icon },
-            { id: 'users', label: 'Users', icon: UsersIcon, count: users.length },
+            { id: 'users', label: 'Users', icon: UsersIcon, count: allUsers.length },
             { id: 'engagements', label: 'Engagements', icon: FileTextIcon, count: engagements.length }
           ].map((tab) => (
             <button
@@ -196,6 +267,21 @@ const OrganizationDetails = () => {
                       />
                     ) : (
                       <p className="mt-1 text-sm text-gray-900">{organization?.name}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Organization ID</label>
+                    {isEditing && currentUser?.system_roles?.includes('admin') ? (
+                      <input
+                        type="text"
+                        value={editedOrg?.id || ''}
+                        onChange={(e) => setEditedOrg({ ...editedOrg, id: e.target.value })}
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                        placeholder="Enter organization ID"
+                      />
+                    ) : (
+                      <p className="mt-1 text-sm text-gray-900 font-mono">{organization?.id}</p>
                     )}
                   </div>
                   
@@ -434,11 +520,16 @@ const OrganizationDetails = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {users.map((user) => (
-                    <tr key={user.userId}>
+                  {allUsers.map((user) => (
+                    <tr key={user.userId} className={user.userType === 'system_admin' ? 'bg-gray-50' : ''}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
                           {user.firstName} {user.lastName}
+                          {user.userType === 'system_admin' && (
+                            <span className="ml-2 px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">
+                              System Admin
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -446,9 +537,14 @@ const OrganizationDetails = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-wrap gap-1">
+                          {user.system_roles?.map((role) => (
+                            <span key={role} className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">
+                              System {getRoleName(role, 'system')}
+                            </span>
+                          ))}
                           {user.organization_roles?.map((role) => (
                             <span key={role} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">
-                              {role}
+                              {getRoleName(role, 'organization')}
                             </span>
                           ))}
                         </div>
@@ -463,7 +559,7 @@ const OrganizationDetails = () => {
                   ))}
                 </tbody>
               </table>
-              {users.length === 0 && (
+              {allUsers.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
                   No users found for this organization.
                 </div>

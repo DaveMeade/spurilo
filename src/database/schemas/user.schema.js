@@ -4,6 +4,9 @@
 
 import mongoose from 'mongoose';
 const { Schema } = mongoose;
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import {
     emailValidator,
     phoneValidator,
@@ -14,6 +17,34 @@ import {
     roleCompatibilityValidator,
     userOrganizationDomainValidator
 } from './validators/business.validators.js';
+
+// Load role configuration dynamically
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+let roleConfig = null;
+
+try {
+    const configPath = path.join(__dirname, '../../../config/user.roles.json');
+    const configData = fs.readFileSync(configPath, 'utf8');
+    roleConfig = JSON.parse(configData);
+} catch (error) {
+    console.error('Failed to load user.roles.json, using defaults:', error.message);
+    // Fallback configuration
+    roleConfig = {
+        systemRoles: {
+            admin: {},
+            auditor: {}
+        },
+        organizationRoles: {
+            pending: {},
+            admin: {},
+            primary_contact: {},
+            manage_engagements: {},
+            view_reports: {},
+            manage_users: {}
+        }
+    };
+}
 
 /**
  * User preferences schema
@@ -148,7 +179,7 @@ const userSchema = new Schema({
             roleCompatibilityValidator,
             {
                 validator: function(roles) {
-                    const validSystemRoles = ['admin', 'auditor'];
+                    const validSystemRoles = Object.keys(roleConfig.systemRoles || {});
                     return roles.every(role => validSystemRoles.includes(role));
                 },
                 message: 'Invalid system role'
@@ -162,7 +193,7 @@ const userSchema = new Schema({
             arrayLengthValidator(0, 5),
             {
                 validator: function(roles) {
-                    const validOrgRoles = ['pending', 'manage_engagements', 'view_reports', 'manage_users'];
+                    const validOrgRoles = Object.keys(roleConfig.organizationRoles || {});
                     return roles.every(role => validOrgRoles.includes(role));
                 },
                 message: 'Invalid organization role'

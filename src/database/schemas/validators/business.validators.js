@@ -3,7 +3,7 @@
  * These validators enforce application-specific business logic
  */
 
-import { config } from '../../../config/config.manager.js';
+// Removed config import to avoid circular dependency
 
 /**
  * Engagement ID format validator
@@ -22,25 +22,11 @@ const engagementIdValidator = {
  * Organization status transition validator
  */
 const organizationStatusTransitionValidator = {
-    validator: async function(newStatus) {
-        if (!this._id) return true; // New document
-        
-        const Organization = this.constructor;
-        const original = await Organization.findById(this._id);
-        if (!original) return true;
-        
-        const validTransitions = {
-            'pending': ['active', 'disabled'],
-            'active': ['paused', 'disabled', 'archived'],
-            'paused': ['active', 'disabled', 'archived'],
-            'disabled': ['active', 'archived'],
-            'archived': [] // Terminal state
-        };
-        
-        const allowed = validTransitions[original.status] || [];
-        return allowed.includes(newStatus);
+    validator: function(newStatus) {
+        // All status transitions are now allowed
+        return true;
     },
-    message: props => `Invalid status transition from ${props.path} to ${props.value}`
+    message: 'Organization status validation failed'
 };
 
 /**

@@ -24,7 +24,12 @@
       "Bash(mv:*)",
       "Bash(ln:*)",
       "Bash(docker compose:*)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run server:*)",
+      "Bash(npm run api:*)",
+      "Bash(npm run:*)",
+      "Bash(killall:*)"
     ],
     "deny": []
   }

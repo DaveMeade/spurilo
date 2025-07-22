@@ -77,6 +77,38 @@ console.log('✅ Authentication routes configured');
 // Admin API routes
 import * as adminOrgApi from './api/admin/organizations.api.js';
 
+// Import userRoleHelpers at server startup to avoid repeated imports
+let userRoleHelpers = null;
+let cachedAdminCheck = { result: null, timestamp: 0 };
+let appConfig = null;
+
+// Load app configuration
+async function loadAppConfig() {
+  try {
+    const { configManager } = await import('./config/config.manager.js');
+    if (!configManager.initialized) {
+      await configManager.initialize();
+    }
+    appConfig = configManager.getAppSettings();
+    console.log('✅ App configuration loaded');
+  } catch (error) {
+    console.warn('⚠️  Could not load app config, using defaults:', error.message);
+    // Fallback configuration
+    appConfig = {
+      systems: {
+        userManagement: {
+          enableRoleCaching: true,
+          adminUserCacheTTL: 30000,
+          roleQueryTimeout: 5000,
+          enableStartupInitialization: true,
+          maxRoleInitAttempts: 3,
+          roleInitRetryInterval: 2000
+        }
+      }
+    };
+  }
+}
+
 // Admin organization endpoints
 spuriloApp.get('/api/admin/organizations', adminOrgApi.requireAdmin, adminOrgApi.listOrganizations);
 spuriloApp.get('/api/admin/organizations/:id', adminOrgApi.requireAdmin, adminOrgApi.getOrganization);
@@ -86,28 +118,69 @@ spuriloApp.get('/api/admin/organizations/:id/users', adminOrgApi.requireAdmin, a
 spuriloApp.get('/api/admin/organizations/:id/engagements', adminOrgApi.requireAdmin, adminOrgApi.getOrganizationEngagements);
 console.log('✅ Admin organization routes configured');
 
-// API Routes
-spuriloApp.get('/api/system/status', async (req, res) => {
+// Function to invalidate admin user cache
+function invalidateAdminCache() {
+  cachedAdminCheck = { result: null, timestamp: 0 };
+  console.log('🔄 Admin user cache invalidated');
+}
+
+// Helper function to get admin users with caching
+async function getCachedAdminUsers() {
+  const now = Date.now();
+  const userMgmtConfig = appConfig?.systems?.userManagement || {};
+  const cacheTTL = userMgmtConfig.adminUserCacheTTL || 30000;
+  const queryTimeout = userMgmtConfig.roleQueryTimeout || 5000;
+  
+  // Use shorter TTL when no admins found to speed up detection of new admins
+  const noAdminTTL = userMgmtConfig.noAdminCacheTTL || 5000;
+  const activeTTL = (cachedAdminCheck.result && cachedAdminCheck.result.length > 0) ? cacheTTL : Math.min(cacheTTL, noAdminTTL);
+  
+  // Check if caching is enabled and return cached result if still valid
+  if (userMgmtConfig.enableRoleCaching !== false && 
+      cachedAdminCheck.result !== null && 
+      (now - cachedAdminCheck.timestamp) < activeTTL) {
+    return cachedAdminCheck.result;
+  }
+  
   try {
-    // Check if any admin users exist
-    console.log('System status check - importing userRoleHelpers...');
-    const { userRoleHelpers } = await import('./user-role/user.role.helpers.js');
+    // Initialize userRoleHelpers only once
+    if (!userRoleHelpers) {
+      const { userRoleHelpers: helpers } = await import('./user-role/user.role.helpers.js');
+      userRoleHelpers = helpers;
+    }
     
-    console.log('System status check - checking if helpers initialized...');
     if (!userRoleHelpers.initialized) {
-      console.log('System status check - helpers not initialized, initializing...');
       await userRoleHelpers.initialize();
     }
     
-    console.log('System status check - getting admin users...');
-    // Add timeout to prevent hanging
+    // Add configurable timeout to prevent hanging
     const adminUsersPromise = userRoleHelpers.getUsersByRole('admin');
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Database timeout')), 5000)
+      setTimeout(() => reject(new Error('Database timeout')), queryTimeout)
     );
     
     const adminUsers = await Promise.race([adminUsersPromise, timeoutPromise]);
-    console.log('System status check - found', adminUsers.length, 'admin users');
+    
+    // Cache the result if caching is enabled
+    if (userMgmtConfig.enableRoleCaching !== false) {
+      cachedAdminCheck = {
+        result: adminUsers,
+        timestamp: now
+      };
+    }
+    
+    return adminUsers;
+  } catch (error) {
+    console.error('Error getting admin users:', error.message);
+    // Don't cache errors, but return empty array
+    return [];
+  }
+}
+
+// API Routes
+spuriloApp.get('/api/system/status', async (req, res) => {
+  try {
+    const adminUsers = await getCachedAdminUsers();
     
     res.json({ 
       hasAdminUser: adminUsers.length > 0,
@@ -116,7 +189,6 @@ spuriloApp.get('/api/system/status', async (req, res) => {
     });
   } catch (error) {
     console.error('Error checking system status:', error.message);
-    console.error('Full error:', error);
     
     // Check dbManager status instead of mongoose directly
     const { dbManager } = await import('./database/db-manager.js');
@@ -250,7 +322,11 @@ spuriloApp.post('/api/users', async (req, res) => {
       organization = await dbManager.findOrCreateOrganizationByDomain(userData, orgData);
       userData.organizationId = organization.id;
       
+      // Add both admin and primary contact roles for initial admin user
+      userData.organization_roles = ['admin', 'primary_contact'];
+      
       console.log('Organization resolved:', organization.name, 'with ID:', organization.id);
+      console.log('Initial admin assigned roles:', userData.organization_roles);
     } else {
       // For non-admin users, still check if organization exists by domain
       console.log('Checking for existing organization by domain...');
@@ -272,6 +348,12 @@ spuriloApp.post('/api/users', async (req, res) => {
     // Create user with proper schema validation
     const user = await dbManager.createUser(userData);
     console.log('Created user successfully:', user.firstName, user.lastName);
+    
+    // Invalidate admin cache if a new admin user was created
+    if (user.system_roles?.includes('admin')) {
+      invalidateAdminCache();
+      console.log('🔄 Admin user created, cache invalidated');
+    }
     
     res.json({
       userId: user.userId,
@@ -316,6 +398,12 @@ spuriloApp.post('/api/test/create-user', async (req, res) => {
     };
     
     const user = await dbManager.createUser(userData);
+    
+    // Invalidate admin cache since test users are created with admin role
+    if (user.system_roles?.includes('admin')) {
+      invalidateAdminCache();
+      console.log('🔄 Test admin user created, cache invalidated');
+    }
     
     res.json({ success: true, user: user });
   } catch (error) {
@@ -476,6 +564,75 @@ if (process.env.NODE_ENV === 'production') {
 
 console.log('Starting Spurilo server...');
 // MongoDB connection is now handled by dbManager
+
+// Initialize systems on server startup
+async function initializeSystems() {
+  try {
+    console.log('Initializing systems...');
+    
+    // Load configuration first
+    await loadAppConfig();
+    
+    // Initialize database manager first
+    const { dbManager } = await import('./database/db-manager.js');
+    if (!dbManager.initialized) {
+      await dbManager.initialize();
+      console.log('✅ Database Manager initialized');
+    }
+    
+    // Initialize Organization Manager
+    try {
+      const { OrganizationHelpers } = await import('./orgs/organization.helpers.js');
+      await OrganizationHelpers.initialize();
+      console.log('✅ Organization Manager initialized');
+    } catch (orgError) {
+      console.warn('⚠️  Organization Manager initialization failed:', orgError.message);
+      // Continue anyway - the manager will initialize on first use
+    }
+    
+    // Initialize UserRole helpers based on configuration
+    const userMgmtConfig = appConfig?.systems?.userManagement || {};
+    if (userMgmtConfig.enableStartupInitialization !== false) {
+      let initAttempts = 0;
+      const maxAttempts = userMgmtConfig.maxRoleInitAttempts || 3;
+      const retryInterval = userMgmtConfig.roleInitRetryInterval || 2000;
+      
+      while (initAttempts < maxAttempts) {
+        try {
+          const { userRoleHelpers: helpers } = await import('./user-role/user.role.helpers.js');
+          userRoleHelpers = helpers;
+          if (!userRoleHelpers.initialized) {
+            await userRoleHelpers.initialize();
+          }
+          console.log('✅ User Role Manager initialized');
+          break;
+        } catch (userRoleError) {
+          initAttempts++;
+          console.warn(`⚠️  User Role Manager initialization attempt ${initAttempts}/${maxAttempts} failed:`, userRoleError.message);
+          if (initAttempts < maxAttempts) {
+            console.log(`Retrying in ${retryInterval}ms...`);
+            await new Promise(resolve => setTimeout(resolve, retryInterval));
+          } else {
+            console.warn('⚠️  User Role Manager initialization failed after all attempts - will initialize on first use');
+          }
+        }
+      }
+    } else {
+      console.log('⏭️  User Role Manager startup initialization disabled by configuration');
+    }
+    
+    // Other system initializations can go here
+    
+  } catch (error) {
+    console.error('❌ Failed to initialize systems:', error);
+    // Server will still start but with limited functionality
+  }
+}
+
+// Initialize systems asynchronously (don't block server startup)
+setTimeout(() => {
+  initializeSystems();
+}, 1000);
 
 const spuriloServer = http.createServer(spuriloApp);
 

@@ -5,6 +5,8 @@ import { fetchAPI } from '../../utils/api';
 
 const OrganizationsList = () => {
   const [organizations, setOrganizations] = useState([]);
+  const [organizationUsers, setOrganizationUsers] = useState({});
+  const [appSettings, setAppSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,8 +20,39 @@ const OrganizationsList = () => {
   const loadOrganizations = async () => {
     try {
       setLoading(true);
+      
+      // Load organizations
       const data = await fetchAPI('/api/admin/organizations');
       setOrganizations(data);
+      
+      // Load app settings for CRM links - fallback if API doesn't exist
+      try {
+        const settings = await fetchAPI('/api/config/app');
+        setAppSettings(settings);
+      } catch (settingsErr) {
+        console.warn('Could not load app settings, using defaults');
+        setAppSettings({
+          app: {
+            externalCRM: {
+              'add-org': 'https://slackspace.capsulecrm.com/party/organisation/new'
+            }
+          }
+        });
+      }
+      
+      // Load users for each organization
+      const usersMap = {};
+      for (const org of data) {
+        try {
+          const users = await fetchAPI(`/api/admin/organizations/${org.id}/users`);
+          usersMap[org.id] = users;
+        } catch (err) {
+          console.error(`Failed to load users for org ${org.id}:`, err);
+          usersMap[org.id] = [];
+        }
+      }
+      setOrganizationUsers(usersMap);
+      
     } catch (err) {
       setError(err.message || 'Failed to load organizations');
     } finally {
@@ -45,9 +78,13 @@ const OrganizationsList = () => {
     let bValue = b[sortField];
 
     // Handle nested fields
-    if (sortField === 'short_name') {
-      aValue = a.aka_names?.short_name || '';
-      bValue = b.aka_names?.short_name || '';
+    if (sortField === 'primary_contact') {
+      const aUsers = organizationUsers[a.id] || [];
+      const bUsers = organizationUsers[b.id] || [];
+      const aPrimaryContacts = aUsers.filter(u => u.organization_roles?.includes('primary_contact'));
+      const bPrimaryContacts = bUsers.filter(u => u.organization_roles?.includes('primary_contact'));
+      aValue = aPrimaryContacts.length > 0 ? `${aPrimaryContacts[0].firstName} ${aPrimaryContacts[0].lastName}` : '';
+      bValue = bPrimaryContacts.length > 0 ? `${bPrimaryContacts[0].firstName} ${bPrimaryContacts[0].lastName}` : '';
     }
 
     if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
@@ -87,6 +124,41 @@ const OrganizationsList = () => {
         {status}
       </span>
     );
+  };
+
+  const getPrimaryContacts = (orgId) => {
+    const users = organizationUsers[orgId] || [];
+    return users.filter(user => user.organization_roles?.includes('primary_contact'));
+  };
+
+  const renderCRMLink = (org) => {
+    if (!appSettings?.app?.externalCRM) return null;
+    
+    if (org.crm_link) {
+      return (
+        <a 
+          href={org.crm_link} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          style={{ color: 'purple' }}
+          className="block text-sm hover:underline"
+        >
+          ☑️CRM Record
+        </a>
+      );
+    } else {
+      return (
+        <a 
+          href={appSettings.app.externalCRM['add-org']} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          style={{ color: 'red' }}
+          className="block text-sm hover:underline"
+        >
+          ❌ No CRM Record
+        </a>
+      );
+    }
   };
 
   if (loading) {
@@ -160,11 +232,11 @@ const OrganizationsList = () => {
               <th
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('short_name')}
+                onClick={() => handleSort('primary_contact')}
               >
                 <div className="flex items-center space-x-1">
-                  <span>Short Name</span>
-                  <SortIcon field="short_name" />
+                  <span>Primary Contact</span>
+                  <SortIcon field="primary_contact" />
                 </div>
               </th>
               <th
@@ -203,10 +275,21 @@ const OrganizationsList = () => {
               <tr key={org.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">{org.name}</div>
-                  <div className="text-sm text-gray-500">{org.id}</div>
+                  <div className="text-sm text-gray-500">{org.aka_names?.short_name || org.id}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{org.aka_names?.short_name || '-'}</div>
+                  <div className="text-sm text-gray-900">
+                    {(() => {
+                      const primaryContacts = getPrimaryContacts(org.id);
+                      if (primaryContacts.length > 0) {
+                        return primaryContacts.map((contact, idx) => (
+                          <div key={idx}>{contact.firstName} {contact.lastName}</div>
+                        ));
+                      } else {
+                        return <span className="text-gray-400">None assigned</span>;
+                      }
+                    })()}
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {getStatusBadge(org.status)}
@@ -233,13 +316,16 @@ const OrganizationsList = () => {
                   {new Date(org.createdDate).toLocaleDateString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <Link
-                    to={`/admin/organizations/${org.id}`}
-                    className="text-blue-600 hover:text-blue-900 inline-flex items-center space-x-1"
-                  >
-                    <EyeIcon className="w-4 h-4" />
-                    <span>View</span>
-                  </Link>
+                  <div className="space-y-1">
+                    <Link
+                      to={`/admin/organizations/${org.id}`}
+                      className="text-blue-600 hover:text-blue-900 inline-flex items-center space-x-1"
+                    >
+                      <EyeIcon className="w-4 h-4" />
+                      <span>View</span>
+                    </Link>
+                    {renderCRMLink(org)}
+                  </div>
                 </td>
               </tr>
             ))}

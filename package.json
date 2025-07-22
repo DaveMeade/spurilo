@@ -5,11 +5,13 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "concurrently \"docker compose -f ./docker/docker-compose.yml up -d\" \"npm run start:express\" \"npm run dev\"",
-    "start:express": "node src/server.js",
+    "start": "concurrently \"docker compose -f ./docker/docker-compose.yml up -d\" \"npm run start:express\"",
+    "start:express": "concurrently \"node src/server.js\" \"npm run dev\"",
+    "stop:express": "lsof -ti tcp:8000,3000 | xargs kill -SIGINT",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "prestop": "npm run stop:express",
     "stop": "docker compose -f ./docker/docker-compose.yml down --remove-orphans",
     "clearnode": "rmdir -f node_modules && rm -f package-lock.json && npm install"
   },

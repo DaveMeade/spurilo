@@ -34,7 +34,7 @@ This project is being built and maintained with AI-assisted development patterns
 The application uses a centralized database access layer (`db-manager`) that provides the **only** interface for database operations. All MongoDB access goes through this layer to ensure consistency, security, and maintainability. It is very important that all database access go through the database mananger provided interface.
 
 #### Database Manager (`/src/database/db-manager.js`)
-- **Purpose**: Single interface for all database operations
+- **Purpose**: Single interface for all database operations - THIS IS IMPORTANT
 - **Features**: Connection management, CRUD operations, health monitoring
 - **Security**: Handles MongoDB authentication and connection credentials
 - **Usage**: Import `{ dbManager }` - all other components use this interface
