@@ -11,6 +11,7 @@ import mongoose from 'mongoose';
 import { User } from './schemas/user.schema.js';
 import { Organization } from './schemas/organization.schema.js';
 import { Engagement } from './schemas/engagement.schema.js';
+import { UserOrganizationRole } from './schemas/userOrganizationRole.schema.js';
 
 class SimpleDbManager {
     constructor() {
@@ -19,6 +20,7 @@ class SimpleDbManager {
         this.User = User;
         this.Organization = Organization;
         this.Engagement = Engagement;
+        this.UserOrganizationRole = UserOrganizationRole;
     }
 
     async initialize() {
@@ -30,6 +32,7 @@ class SimpleDbManager {
             await this.User.createIndexes();
             await this.Organization.createIndexes();
             await this.Engagement.createIndexes();
+            await this.UserOrganizationRole.createIndexes();
             
             this.initialized = true;
             console.log('SimpleDbManager initialized successfully');
@@ -561,6 +564,182 @@ class SimpleDbManager {
             return await this.Engagement.find({ org: organizationId });
         } catch (error) {
             console.error('Failed to get engagements by organization ID:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Create user organization role mapping
+     */
+    async createUserOrganizationRole(roleData) {
+        this.ensureInitialized();
+        
+        try {
+            const mapping = new this.UserOrganizationRole(roleData);
+            await mapping.save();
+            return mapping.toJSON();
+        } catch (error) {
+            console.error('Failed to create user organization role:', error);
+            
+            if (error.code === 11000) {
+                throw new Error('User already has roles in this organization');
+            }
+            
+            if (error.name === 'ValidationError') {
+                const validationErrors = Object.values(error.errors).map(e => e.message);
+                throw new Error(`Validation failed: ${validationErrors.join(', ')}`);
+            }
+            
+            throw error;
+        }
+    }
+
+    /**
+     * Find user organization roles
+     */
+    async findUserOrganizationRoles(userId, organizationId = null) {
+        this.ensureInitialized();
+        
+        try {
+            const query = { userId, status: 'active' };
+            if (organizationId) query.organizationId = organizationId;
+            
+            return await this.UserOrganizationRole.find(query);
+        } catch (error) {
+            console.error('Failed to find user organization roles:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Find organization users with roles
+     */
+    async findOrganizationUsers(organizationId, roles = null) {
+        this.ensureInitialized();
+        
+        try {
+            const query = { organizationId, status: 'active' };
+            if (roles) query.roles = { $in: roles };
+            
+            const mappings = await this.UserOrganizationRole.find(query);
+            
+            // Get full user details for each mapping
+            const userPromises = mappings.map(async (mapping) => {
+                const user = await this.findUserByUserId(mapping.userId);
+                return user ? {
+                    ...user.toJSON(),
+                    roleMapping: mapping.toJSON()
+                } : null;
+            });
+            
+            const users = await Promise.all(userPromises);
+            return users.filter(user => user !== null);
+        } catch (error) {
+            console.error('Failed to find organization users:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Update user organization role
+     */
+    async updateUserOrganizationRole(userId, organizationId, updateData) {
+        this.ensureInitialized();
+        
+        try {
+            return await this.UserOrganizationRole.findOneAndUpdate(
+                { userId, organizationId },
+                updateData,
+                { new: true, upsert: true }
+            );
+        } catch (error) {
+            console.error('Failed to update user organization role:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Remove user organization role (soft delete)
+     */
+    async removeUserOrganizationRole(userId, organizationId) {
+        this.ensureInitialized();
+        
+        try {
+            return await this.UserOrganizationRole.findOneAndUpdate(
+                { userId, organizationId },
+                { status: 'expired', expiresAt: new Date() },
+                { new: true }
+            );
+        } catch (error) {
+            console.error('Failed to remove user organization role:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Delete user organization role (hard delete)
+     */
+    async deleteUserOrganizationRole(userId, organizationId) {
+        this.ensureInitialized();
+        
+        try {
+            return await this.UserOrganizationRole.deleteOne({ userId, organizationId });
+        } catch (error) {
+            console.error('Failed to delete user organization role:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Check if user has specific role in organization
+     */
+    async userHasOrganizationRole(userId, organizationId, role) {
+        this.ensureInitialized();
+        
+        try {
+            const mapping = await this.UserOrganizationRole.findOne({
+                userId,
+                organizationId,
+                status: 'active',
+                roles: role
+            });
+            
+            return !!mapping;
+        } catch (error) {
+            console.error('Failed to check user organization role:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get all organizations for a user
+     */
+    async getUserOrganizations(userId) {
+        this.ensureInitialized();
+        
+        try {
+            const mappings = await this.UserOrganizationRole.find({
+                userId,
+                status: 'active'
+            });
+            
+            const orgPromises = mappings.map(async (mapping) => {
+                const org = await this.findOrganizationById(mapping.organizationId);
+                return org ? {
+                    ...org.toJSON(),
+                    roles: mapping.roles,
+                    roleAssignment: {
+                        assignedBy: mapping.assignedBy,
+                        assignedAt: mapping.assignedAt,
+                        status: mapping.status
+                    }
+                } : null;
+            });
+            
+            const orgs = await Promise.all(orgPromises);
+            return orgs.filter(org => org !== null);
+        } catch (error) {
+            console.error('Failed to get user organizations:', error);
             throw error;
         }
     }

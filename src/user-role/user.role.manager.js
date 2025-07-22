@@ -535,6 +535,143 @@ class UserRoleManager {
     }
 
     /**
+     * Assign organization role to user
+     */
+    async assignOrganizationRole(userId, organizationId, roles, assignedBy) {
+        await this.ensureInitialized();
+        
+        try {
+            // Validate user and organization exist
+            const user = await this.dbManager.findUserByUserId(userId);
+            if (!user) {
+                throw new Error(`User not found: ${userId}`);
+            }
+            
+            const organization = await this.dbManager.findOrganizationById(organizationId);
+            if (!organization) {
+                throw new Error(`Organization not found: ${organizationId}`);
+            }
+            
+            // Ensure roles is an array
+            const roleArray = Array.isArray(roles) ? roles : [roles];
+            
+            // Validate roles
+            const validOrgRoles = Object.keys(this.roleConfig.organizationRoles || {});
+            const invalidRoles = roleArray.filter(role => !validOrgRoles.includes(role));
+            
+            if (invalidRoles.length > 0) {
+                throw new Error(`Invalid organization roles: ${invalidRoles.join(', ')}`);
+            }
+            
+            // Create or update role mapping
+            const roleData = {
+                userId,
+                organizationId,
+                roles: roleArray,
+                assignedBy,
+                assignedAt: new Date(),
+                status: 'active'
+            };
+            
+            const mapping = await this.dbManager.updateUserOrganizationRole(
+                userId,
+                organizationId,
+                roleData
+            );
+            
+            this.log(`Assigned organization roles ${roleArray.join(', ')} to user ${userId} in org ${organizationId}`);
+            return mapping;
+        } catch (error) {
+            console.error('Failed to assign organization role:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Remove organization role from user
+     */
+    async removeOrganizationRole(userId, organizationId) {
+        await this.ensureInitialized();
+        
+        try {
+            const result = await this.dbManager.removeUserOrganizationRole(userId, organizationId);
+            this.log(`Removed organization roles for user ${userId} from org ${organizationId}`);
+            return result;
+        } catch (error) {
+            console.error('Failed to remove organization role:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get user's organization roles
+     */
+    async getUserOrganizationRoles(userId, organizationId = null) {
+        await this.ensureInitialized();
+        
+        try {
+            const mappings = await this.dbManager.findUserOrganizationRoles(userId, organizationId);
+            
+            if (organizationId) {
+                // Return roles for specific organization
+                return mappings[0]?.roles || [];
+            }
+            
+            // Return all organization roles grouped by organization
+            return mappings.reduce((acc, mapping) => {
+                acc[mapping.organizationId] = mapping.roles;
+                return acc;
+            }, {});
+        } catch (error) {
+            console.error('Failed to get user organization roles:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get organization users with optional role filter
+     */
+    async getOrganizationUsers(organizationId, roles = null) {
+        await this.ensureInitialized();
+        
+        try {
+            const users = await this.dbManager.findOrganizationUsers(organizationId, roles);
+            return users;
+        } catch (error) {
+            console.error('Failed to get organization users:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Check if user has specific role in organization
+     */
+    async userHasOrganizationRole(userId, organizationId, role) {
+        await this.ensureInitialized();
+        
+        try {
+            return await this.dbManager.userHasOrganizationRole(userId, organizationId, role);
+        } catch (error) {
+            console.error('Failed to check user organization role:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Get all organizations for a user
+     */
+    async getUserOrganizations(userId) {
+        await this.ensureInitialized();
+        
+        try {
+            return await this.dbManager.getUserOrganizations(userId);
+        } catch (error) {
+            console.error('Failed to get user organizations:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Health check
      */
     async healthCheck() {

@@ -58,6 +58,11 @@ import {
     EngagementTypeSettings
 } from './engagementType.schema.js';
 
+import {
+    userOrganizationRoleSchema,
+    UserOrganizationRole
+} from './userOrganizationRole.schema.js';
+
 // Import validators for external use
 import * as commonValidators from './validators/common.validators.js';
 import * as businessValidators from './validators/business.validators.js';
@@ -87,7 +92,10 @@ const schemas = {
     
     // Configuration schemas
     engagementTypeSchema,
-    engagementTypeSettingsSchema
+    engagementTypeSettingsSchema,
+    
+    // Role mapping schemas
+    userOrganizationRoleSchema
 };
 
 /**
@@ -113,7 +121,10 @@ const models = {
     
     // Configuration models
     EngagementType,
-    EngagementTypeSettings
+    EngagementTypeSettings,
+    
+    // Role mapping models
+    UserOrganizationRole
 };
 
 /**
@@ -196,6 +207,7 @@ export {
     roleAssignmentSchema,
     engagementTypeSchema,
     engagementTypeSettingsSchema,
+    userOrganizationRoleSchema,
     
     // Export all models
     Organization,
@@ -213,6 +225,7 @@ export {
     RoleAssignment,
     EngagementType,
     EngagementTypeSettings,
+    UserOrganizationRole,
     
     // Export grouped objects for convenience
     schemas,

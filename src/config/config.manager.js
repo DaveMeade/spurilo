@@ -2,11 +2,36 @@
  * ConfigManager - Centralized configuration management
  * Handles loading, validation, and runtime updates of configuration
  */
+
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get current directory for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 class ConfigManager {
     constructor() {
         this.config = {};
         this.watchers = new Map();
         this.loaded = false;
+        this.initialized = false;
+    }
+
+    /**
+     * Initialize the config manager
+     */
+    async initialize() {
+        if (this.initialized) return;
+        
+        try {
+            await this.loadAllConfigs();
+            this.initialized = true;
+        } catch (error) {
+            console.error('Failed to initialize ConfigManager:', error);
+            throw error;
+        }
     }
     
     /**
@@ -14,14 +39,19 @@ class ConfigManager {
      */
     async loadAllConfigs() {
         try {
+            // Get config directory path relative to project root
+            // This file is in src/config/, so go up two levels to reach project root
+            const configDir = path.resolve(__dirname, '../../config');
+            
+            
             // Load core configuration files
-            this.config.app = await this.loadJSON('/config/app.settings.json');
-            this.config.debug = await this.loadJSON('/config/debug.settings.json');
-            this.config.audit = await this.loadJSON('/config/audit.settings.json');
-            this.config.compliance = await this.loadJSON('/config/compliance.settings.json');
+            this.config.app = await this.loadJSON(path.join(configDir, 'app.settings.json'));
+            this.config.debug = await this.loadJSON(path.join(configDir, 'debug.settings.json'));
+            this.config.audit = await this.loadJSON(path.join(configDir, 'audit.settings.json'));
+            this.config.compliance = await this.loadJSON(path.join(configDir, 'compliance.settings.json'));
             // Risk and reporting configs moved to archive until systems are implemented
-            // this.config.risk = await this.loadJSON('/config/archive/_riskSettings.json');
-            // this.config.reporting = await this.loadJSON('/config/archive/_reportSettings.json');
+            // this.config.risk = await this.loadJSON(path.join(configDir, 'archive/_riskSettings.json'));
+            // this.config.reporting = await this.loadJSON(path.join(configDir, 'archive/_reportSettings.json'));
             
             // Validate configuration
             await this.validateConfig();
@@ -37,15 +67,13 @@ class ConfigManager {
     /**
      * Load individual JSON configuration file
      */
-    async loadJSON(path) {
+    async loadJSON(filePath) {
         try {
-            const response = await fetch(path);
-            if (!response.ok) {
-                throw new Error(`Failed to load config file: ${path}`);
-            }
-            return await response.json();
+            // Use Node.js fs to read the file synchronously for simplicity
+            const fileContent = fs.readFileSync(filePath, 'utf8');
+            return JSON.parse(fileContent);
         } catch (error) {
-            console.warn(`Config file not found or invalid: ${path}, using defaults`);
+            console.warn(`Config file not found or invalid: ${filePath}, using defaults`);
             return {};
         }
     }
@@ -64,8 +92,9 @@ class ConfigManager {
         
         const value = this.getNestedValue(this.config, path);
         
-        // Log configuration access in debug mode
-        if (this.get('debug.logConfigAccess', false)) {
+        // Log configuration access in debug mode (avoid recursive call)
+        const debugValue = this.getNestedValue(this.config, 'debug.logConfigAccess');
+        if (debugValue) {
             console.log(`Config access: ${path} = ${JSON.stringify(value)}`);
         }
         
@@ -81,11 +110,20 @@ class ConfigManager {
         this.setNestedValue(this.config, path, value);
         this.notifyWatchers(path, value);
         
-        if (this.get('debug.logConfigChanges', false)) {
+        const debugValue = this.getNestedValue(this.config, 'debug.logConfigChanges');
+        if (debugValue) {
             console.log(`Config updated: ${path} = ${JSON.stringify(value)}`);
         }
     }
     
+    /**
+     * Get app settings (convenience method for server)
+     * @returns {Object} App configuration object
+     */
+    getAppSettings() {
+        return this.config.app || {};
+    }
+
     /**
      * Watch for configuration changes
      * @param {string} path - Configuration path to watch
@@ -162,7 +200,7 @@ class ConfigManager {
         const errors = [];
         
         // Validate app configuration
-        if (!this.config.app?.name) {
+        if (!this.config.app?.app?.name) {
             errors.push('app.name is required');
         }
         
@@ -252,21 +290,10 @@ class ConfigManager {
 // Global configuration instance
 const config = new ConfigManager();
 
-// Auto-load configuration when module is imported
-if (typeof window !== 'undefined') {
-    // Browser environment
-    document.addEventListener('DOMContentLoaded', async () => {
-        try {
-            await config.loadAllConfigs();
-        } catch (error) {
-            console.error('Failed to initialize configuration:', error);
-        }
-    });
-} else {
-    // Node.js environment
-    config.loadAllConfigs().catch(error => {
-        console.error('Failed to initialize configuration:', error);
-    });
+// Auto-initialize configuration for Node.js environment
+if (typeof window === 'undefined') {
+    // Node.js environment - don't auto-load, let server control initialization
+    // This prevents issues with async imports and allows proper error handling
 }
 
 // ES modules export

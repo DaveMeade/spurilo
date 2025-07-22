@@ -157,16 +157,82 @@ class OrganizationManager {
     }
 
     /**
-     * Get organization users
+     * Get organization users using new role mapping system
      */
     async getOrganizationUsers(organizationId) {
         this.ensureInitialized();
         
         try {
-            const users = await dbManager.getUsersByOrganizationId(organizationId);
-            return users.map(user => user.toJSON ? user.toJSON() : user);
+            // Import user role manager
+            const { userRoleManager } = await import('../user-role/user.role.manager.js');
+            await userRoleManager.ensureInitialized();
+            
+            // Get users with organization roles
+            const users = await userRoleManager.getOrganizationUsers(organizationId);
+            
+            // Transform to include organization_roles for compatibility
+            return users.map(user => ({
+                ...user,
+                organization_roles: user.roleMapping?.roles || []
+            }));
         } catch (error) {
             console.error('Failed to get organization users:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Assign user to organization with roles
+     */
+    async assignUserToOrganization(userId, organizationId, roles, assignedBy) {
+        this.ensureInitialized();
+        
+        try {
+            const { userRoleManager } = await import('../user-role/user.role.manager.js');
+            await userRoleManager.ensureInitialized();
+            
+            return await userRoleManager.assignOrganizationRole(
+                userId,
+                organizationId,
+                roles,
+                assignedBy
+            );
+        } catch (error) {
+            console.error('Failed to assign user to organization:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Remove user from organization
+     */
+    async removeUserFromOrganization(userId, organizationId) {
+        this.ensureInitialized();
+        
+        try {
+            const { userRoleManager } = await import('../user-role/user.role.manager.js');
+            await userRoleManager.ensureInitialized();
+            
+            return await userRoleManager.removeOrganizationRole(userId, organizationId);
+        } catch (error) {
+            console.error('Failed to remove user from organization:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get organization users by role
+     */
+    async getOrganizationUsersByRole(organizationId, role) {
+        this.ensureInitialized();
+        
+        try {
+            const { userRoleManager } = await import('../user-role/user.role.manager.js');
+            await userRoleManager.ensureInitialized();
+            
+            return await userRoleManager.getOrganizationUsers(organizationId, [role]);
+        } catch (error) {
+            console.error('Failed to get organization users by role:', error);
             throw error;
         }
     }

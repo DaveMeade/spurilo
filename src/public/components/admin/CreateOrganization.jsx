@@ -28,6 +28,9 @@ const CreateOrganization = () => {
     }
   });
 
+  // Track if ID was manually edited by user
+  const [idManuallyEdited, setIdManuallyEdited] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -35,10 +38,16 @@ const CreateOrganization = () => {
       setLoading(true);
       setError(null);
       
+      // Auto-generate ID if empty
+      const finalData = { ...formData };
+      if (!finalData.id && finalData.name) {
+        finalData.id = generateId(finalData.name);
+      }
+      
       // Clean up empty domains
       const cleanedData = {
-        ...formData,
-        org_domains: formData.org_domains.filter(domain => domain.trim() !== '')
+        ...finalData,
+        org_domains: finalData.org_domains.filter(domain => domain.trim() !== '')
       };
       
       const result = await fetchAPI('/api/admin/organizations', {
@@ -99,6 +108,22 @@ const CreateOrganization = () => {
       .substring(0, 20);
   };
 
+  // Handle name field blur - update ID only if not manually edited
+  const handleNameBlur = () => {
+    if (!idManuallyEdited && formData.name) {
+      setFormData(prev => ({
+        ...prev,
+        id: generateId(formData.name)
+      }));
+    }
+  };
+
+  // Handle ID field change - mark as manually edited
+  const handleIdChange = (value) => {
+    setIdManuallyEdited(true);
+    handleInputChange('id', value);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -136,13 +161,8 @@ const CreateOrganization = () => {
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => {
-                  handleInputChange('name', e.target.value);
-                  // Auto-generate ID if ID field is empty or matches previous auto-generated value
-                  if (!formData.id || formData.id === generateId(formData.name)) {
-                    handleInputChange('id', generateId(e.target.value));
-                  }
-                }}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                onBlur={handleNameBlur}
                 required
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
@@ -155,13 +175,13 @@ const CreateOrganization = () => {
               <input
                 type="text"
                 value={formData.id}
-                onChange={(e) => handleInputChange('id', e.target.value)}
-                required
+                onChange={(e) => handleIdChange(e.target.value)}
                 pattern="[a-zA-Z0-9\-]+"
+                placeholder="Leave empty to auto-generate"
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
               <p className="mt-1 text-xs text-gray-500">
-                Letters, numbers, and hyphens only
+                Letters, numbers, and hyphens only. Will auto-generate from organization name if left empty.
               </p>
             </div>
 

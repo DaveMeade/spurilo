@@ -26,8 +26,7 @@
       "add-org": "https://slackspace.capsulecrm.com/party/organisation/new",
       "add-person": "https://slackspace.capsulecrm.com/party/person/new",
       "add-project": "https://slackspace.capsulecrm.com/project/new"
-    }
-  },
+    },
   "systems": {
     "compliance": {
       "defaultFramework": "NIST",

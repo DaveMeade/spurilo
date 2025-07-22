@@ -85,11 +85,11 @@ let appConfig = null;
 // Load app configuration
 async function loadAppConfig() {
   try {
-    const { configManager } = await import('./config/config.manager.js');
-    if (!configManager.initialized) {
-      await configManager.initialize();
+    const { config } = await import('./config/config.manager.js');
+    if (!config.initialized) {
+      await config.initialize();
     }
-    appConfig = configManager.getAppSettings();
+    appConfig = config.getAppSettings();
     console.log('✅ App configuration loaded');
   } catch (error) {
     console.warn('⚠️  Could not load app config, using defaults:', error.message);
@@ -302,7 +302,6 @@ spuriloApp.post('/api/users', async (req, res) => {
       organization: req.body.organization || 'Default Organization',
       title: req.body.title || '',
       system_roles: req.body.system_roles || [],
-      organization_roles: req.body.organization_roles || [],
       status: 'active'
     };
     
@@ -322,11 +321,7 @@ spuriloApp.post('/api/users', async (req, res) => {
       organization = await dbManager.findOrCreateOrganizationByDomain(userData, orgData);
       userData.organizationId = organization.id;
       
-      // Add both admin and primary contact roles for initial admin user
-      userData.organization_roles = ['admin', 'primary_contact'];
-      
       console.log('Organization resolved:', organization.name, 'with ID:', organization.id);
-      console.log('Initial admin assigned roles:', userData.organization_roles);
     } else {
       // For non-admin users, still check if organization exists by domain
       console.log('Checking for existing organization by domain...');
@@ -349,6 +344,20 @@ spuriloApp.post('/api/users', async (req, res) => {
     const user = await dbManager.createUser(userData);
     console.log('Created user successfully:', user.firstName, user.lastName);
     
+    // Assign organization roles for initial admin users using new role mapping system
+    if (req.body.system_roles?.includes('admin') && organization) {
+      const { userRoleManager } = await import('./user-role/user.role.manager.js');
+      await userRoleManager.ensureInitialized();
+      
+      await userRoleManager.assignOrganizationRole(
+        user.userId,
+        organization.id,
+        ['admin', 'primary_contact'],
+        'system-initialization'
+      );
+      console.log('Initial admin assigned organization roles: admin, primary_contact');
+    }
+    
     // Invalidate admin cache if a new admin user was created
     if (user.system_roles?.includes('admin')) {
       invalidateAdminCache();
@@ -363,7 +372,6 @@ spuriloApp.post('/api/users', async (req, res) => {
       organization: user.organization,
       organizationId: user.organizationId,
       system_roles: user.system_roles,
-      organization_roles: user.organization_roles,
       createdDate: user.createdDate
     });
   } catch (error) {
@@ -393,7 +401,6 @@ spuriloApp.post('/api/test/create-user', async (req, res) => {
       lastName: req.body.lastName || 'User',
       organization: req.body.organization || 'Test Org',
       system_roles: ['admin'],
-      organization_roles: [],
       status: 'active'
     };
     
@@ -440,7 +447,6 @@ spuriloApp.get('/api/users', requireAuth, async (req, res) => {
       organization: user.organization,
       roles: user.roles,
       system_roles: user.system_roles,
-      organization_roles: user.organization_roles,
       status: user.status
     }));
 

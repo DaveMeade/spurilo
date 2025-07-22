@@ -1,0 +1,33 @@
+{
+  "_metadata": {
+    "description": "Compliance framework settings and configurations",
+    "version": "1.0.0",
+    "lastUpdated": "2024-07-22",
+    "documentationUrl": "/docs/compliance-frameworks-reference.md"
+  },
+  "_comments": {
+    "frameworks": "Compliance framework definitions and mappings",
+    "assessments": "Assessment and evaluation settings",
+    "reporting": "Compliance reporting configurations"
+  },
+  "frameworks": {
+    "defaultFramework": "NIST",
+    "enabledFrameworks": ["NIST", "ISO27001", "SOC2"],
+    "autoUpdateFrameworks": true,
+    "customFrameworksEnabled": false
+  },
+  "assessments": {
+    "defaultAssessmentType": "gap-assessment", 
+    "autoScheduleFollowUps": true,
+    "followUpIntervalDays": 90,
+    "requireEvidenceForCompliance": true,
+    "allowPartialCompliance": true
+  },
+  "reporting": {
+    "autoGenerateReports": true,
+    "reportRetentionDays": 365,
+    "includeExecutiveSummary": true,
+    "enableComplianceMetrics": true,
+    "defaultReportFormat": "pdf"
+  }
+}

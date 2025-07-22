@@ -34,14 +34,6 @@ try {
         systemRoles: {
             admin: {},
             auditor: {}
-        },
-        organizationRoles: {
-            pending: {},
-            admin: {},
-            primary_contact: {},
-            manage_engagements: {},
-            view_reports: {},
-            manage_users: {}
         }
     };
 }
@@ -186,20 +178,6 @@ const userSchema = new Schema({
             }
         ]
     },
-    organization_roles: {
-        type: [String],
-        default: [],
-        validate: [
-            arrayLengthValidator(0, 5),
-            {
-                validator: function(roles) {
-                    const validOrgRoles = Object.keys(roleConfig.organizationRoles || {});
-                    return roles.every(role => validOrgRoles.includes(role));
-                },
-                message: 'Invalid organization role'
-            }
-        ]
-    },
     engagements: {
         type: [userEngagementSchema],
         default: []
@@ -291,8 +269,6 @@ userSchema.methods.hasRole = function(role, context = 'system') {
     switch (context) {
         case 'system':
             return this.system_roles.includes(role);
-        case 'organization':
-            return this.organization_roles.includes(role);
         case 'engagement':
             // Check in specific engagement context
             return false; // Implement based on engagement context

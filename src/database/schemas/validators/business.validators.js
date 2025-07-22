@@ -249,6 +249,49 @@ const userOrganizationDomainValidator = {
     message: 'User email domain must match organization domains'
 };
 
+/**
+ * User organization reference validator
+ * Validates user and organization references for role mappings
+ */
+const userOrganizationReferenceValidator = {
+    userId: {
+        validator: async function(userId) {
+            const { dbManager } = await import('../../db-manager.js');
+            const user = await dbManager.findUserByUserId(userId);
+            return !!user;
+        },
+        message: 'User ID must reference a valid user'
+    },
+    
+    organizationId: {
+        validator: async function(organizationId) {
+            const { dbManager } = await import('../../db-manager.js');
+            const org = await dbManager.findOrganizationById(organizationId);
+            return !!org;
+        },
+        message: 'Organization ID must reference a valid organization'
+    }
+};
+
+/**
+ * Organization role validator
+ * Validates organization roles against configured roles
+ */
+const organizationRoleValidator = {
+    validator: async function(roles) {
+        try {
+            const { userRoleManager } = await import('../../user-role/user.role.manager.js');
+            await userRoleManager.ensureInitialized();
+            
+            const validOrgRoles = Object.keys(userRoleManager.roleConfig.organizationRoles || {});
+            return roles.every(role => validOrgRoles.includes(role));
+        } catch (error) {
+            return false;
+        }
+    },
+    message: 'Invalid organization role'
+};
+
 export {
     engagementIdValidator,
     organizationStatusTransitionValidator,
@@ -261,5 +304,7 @@ export {
     frameworkAvailabilityValidator,
     evidenceTypeValidator,
     timelineConsistencyValidator,
-    userOrganizationDomainValidator
+    userOrganizationDomainValidator,
+    userOrganizationReferenceValidator,
+    organizationRoleValidator
 };
