@@ -1,4 +1,4 @@
-// This JSONC file contains example data structures for organizations, engagements, engagement control profiles, and messages.
+// This JSONC file contains example data structures for organizations, engagements, engagement requirement profiles, and messages.
 // It is used to illustrate the expected format and fields for each entity in the system.
 // Note: Comments are included to clarify the purpose of each field and structure.
 // This file SHOULD NOT be used within the application as it is, but serves as a template for developers.
@@ -9,7 +9,7 @@
     "id": "acme001",
     "crm_link": "https://slackspace.capsulecrm.com/party/272828446",
     "name": "Automatic Express",
-    "aka_names": { // name variants used in deliverables.
+    "aka_names": { 
         "formal_name": "Automatic Expres, LLC",
         "friendly_name": "Automatic",
         "short_name": "ACME",
@@ -23,17 +23,54 @@
       "defaultOrganizationRole": "pending",
       "requireApproval": true,
       "defaultEngagementRole": "sme"
-    },    
+    },
     "createdBy": "user-1752812035794",
     "createdDate": "2025-07-18T03:46:09.251+00:00",
     "lastUpdated": "2025-07-18T04:13:55.798+00:00"
   }],
 
+  "users": [{
+    "userId": "user-1752812869122",
+    "email": "dave@slackspace.net",
+    "firstName": "David",
+    "lastName": "Meade",
+    "organization": "Slackspace",
+    "organizationId": "org-1752812869122",
+    "system_roles": [
+      "admin"
+    ],
+    "engagements": [],
+    "preferences": {
+      "notifications": true,
+      "emailUpdates": true,
+      "timezone": "UTC"
+    },
+    "status": "active",
+    "oauthProviders": {
+      "google": {
+        "id": "###_OAUTH_ID_###",
+        "lastUsed": {
+          "$date": "2025-07-18T04:28:46.532Z"
+        }
+      }
+    },
+    "lastLogin": {
+      "$date": "2025-07-18T04:28:00.947Z"
+    },
+    "createdDate": {
+      "$date": "2025-07-18T04:27:49.159Z"
+    },
+    "lastUpdated": {
+      "$date": "2025-07-18T04:28:00.948Z"
+    }
+  }],  
+
   "engagement": [{
-    "id": "orgID_engagement_type_yymm:v",
+    "_id": "68890b91b4a366adb54a6abc",
     "org": "orgID",
     "type": "engagement_type",
-    "name": "Organization Internal Audit - YYYY.MM",
+    "engagement_uid": "orgID_engagement_type_####:v",
+    "name": "Organization Internal Audit - YYYY.MM (####)",
     "frameworks": [{
         "framework": "SOC2",
         "components": ["security", "availability", "processing integrity", "confidentiality", "privacy" ]
@@ -59,60 +96,20 @@
     "engagement_owner": "emailaddress",
     "participants": [{
         "user_id": "user@org.com",
-        "roles": ["Engagement Owner", "Control Owner", "SME"]
+        "roles": ["Engagement Owner", "requirement Owner", "SME"]
     }],
     "notes": "",
     "portal_url": "/engagements/${this.id}",
     "created": "date/timestamp",
     "modified": "date/timestamp"
   }],
-
-  "users": [{
-    "userId": "user-1752812869122",
-    "email": "dave@slackspace.net",
-    "firstName": "David",
-    "lastName": "Meade",
-    "organization": "Slackspace",
-    "organizationId": "org-1752812869122",
-    "department": "",
-    "title": "",
-    "phone": "",
-    "system_roles": [
-      "admin"
-    ],
-    "organization_roles": [],
-    "engagements": [],
-    "preferences": {
-      "notifications": true,
-      "emailUpdates": true,
-      "timezone": "UTC"
-    },
-    "status": "active",
-    "oauthProviders": {
-      "google": {
-        "id": "###_OAUTH_ID_###",
-        "lastUsed": {
-          "$date": "2025-07-18T04:28:46.532Z"
-        }
-      }
-    },
-    "lastLogin": {
-      "$date": "2025-07-18T04:28:00.947Z"
-    },
-    "createdDate": {
-      "$date": "2025-07-18T04:27:49.159Z"
-    },
-    "lastUpdated": {
-      "$date": "2025-07-18T04:28:00.948Z"
-    }
-  }],
   
-  "engagement_control_profile": [{
+  "engagement_requirement_profile": [{
     "engagement_id": "orgID_engagement_type_yymm:v",
     "requirement_id": "SOC_TSC_2022_CC1.1:1",
     "included": true,
     "justification": "...",
-    "control_owner": "participant_emailaddress",
+    "requirement_owner": "participant_emailaddress",
     "status": "open|responded|under_review|action_required|complete",
     "owner_response": "see policy X page 14, and published privacy policy",
     "evidence": [{
@@ -132,10 +129,10 @@
     "prior_submissions": [{
         "engagement_id": "last years audit engagement id"
     }],
-    "control_notes": [{
+    "requirement_notes": [{
         "id": "guid",
         "private": true,
-        "note": "This control is provided by a service provider: AWS",
+        "note": "This requirement is provided by a service provider: AWS",
         "author": "participant_email"
     }]
   }],
@@ -143,12 +140,12 @@
   "messages": [{
     "id": "guid",
     "engagement_id": "engagement_id",
-    "control_id": "requirement_id", // if control_id is empty/null, the comment is made at the engagement level
-    "_comment-control_id": "if control_id is empty/null, the comment is made at the engagement level",
+    "requirement_id": "requirement_id", // if requirement_id is empty/null, the comment is made at the engagement level
+    "_comment-requirement_id": "if requirement_id is empty/null, the comment is made at the engagement level",
     "from": "participant_email",
-    "to": "", // if to: is empty/null it is viewable by all participants with access to the engagement or control as applicable
-    "_comment-to": "if to: is empty/null it is viewable by all participants with access to the engagement or control as applicable",
-    "message": "hello @username, I have a follow-up on this control. please ...",
+    "to": "", // if to: is empty/null it is viewable by all participants with access to the engagement or requirement as applicable
+    "_comment-to": "if to: is empty/null it is viewable by all participants with access to the engagement or requirement as applicable",
+    "message": "hello @username, I have a follow-up on this requirement. please ...",
     "mentions": ["@username"],
     "status": "draft | sent | read",
     "meta": [{
@@ -158,7 +155,63 @@
             "on": "date/timestamp"
         }]
     }]
-  }]
+  }],
 
+"requirements": [{
+  "_id": "686c624a82bce9fe182a6c2b",
+  "source": {
+    "name": "SSCF",
+    "version": "0.1.0",
+    "type": "Custom requirement Framework",
+    "ref": "X.1"
+  },
+  "uid": "SSCF:0_1_0:X.1",
+  "type": "requirement Requirement",
+  "_comment": "Requirements.type can be any of: requirement Requirement | Implementation Guidance | Implementation Example | Testing Requirement",
+  "parent": "SSCF:0_1_0:X",
+  "title": "Example requirement",
+  "text": "The entity demonstrates a commitment to integrity and ethical values.",
+  "tags": [
+    "example",
+    "ethics"
+  ],
+  "testPlans": [
+    {
+      "id": "SSCF:0_1_0:X.1:1_default",
+      "description": "Review ethics training logs and signed code of conduct attestations for at least 2 years.",
+      "author": "Slackspace",
+      "date": "2024-03-01T00:00:00Z"
+    }
+  ],
+  "notes": [
+    {
+      "text": "Some notes about this requirement",
+      "private": true,
+      "author": "Slackspace",
+      "date": "2023-10-01T00:00:00Z",
+      "_comment": "notes can be used to provide additional context or information about the requirement to the auditor."
+    }
+  ]    
+}],
+
+"mappings": [{
+  "_id": "6887ddd6631fcdbb0fb1a135",
+  "base_requirement_uid": "SSCF:0_1_0:X.3",
+  "mapped_requirements": [{
+    "uid": "CSF:2.0.0:GV.OC-03",
+    "mapping_to_base": "subset",
+    "justification": "The mapped requirement addresses X but not Y from the base requirement.",
+    "confidence": 0.9,
+    "created_by": "davo",
+    "created_at": "2025-07-26T12:34:56Z",
+    "notes": {
+      "text": "Some notes about this mapping",
+      "private": true,
+      "author": "davo",
+      "date": "2025-07-26T12:34:56Z"
+    }    
+  }]
 }]
 
+
+}]

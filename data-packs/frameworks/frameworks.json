@@ -5,7 +5,16 @@
         },
         "doc_identifier": "CSF_2_0_0",
         "name": "NIST Cybersecurity Framework",
-        "version": "2.0",
+        "version": "2.0.0",
+        "status": "final",
         "website": "https://www.nist.gov/cyberframework"
+    },
+    {
+        "doc_identifier": "slackspace_0.1.0",
+        "name": "Slackspace Requirements Catalogue",
+        "version": "0.1.0",
+        "status": "draft",
+        "maintainer": "Slackspace",
+        "website": "https://slackspace.net"
     }
 ]
