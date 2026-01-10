@@ -60,9 +60,6 @@ Spurilo tracks key user data including their associated 'organization', preferen
   "lastName": "Meade",
   "organization": "Slackspace",
   "organizationId": "org-1752812869122",
-  "system_roles": [
-    "admin"
-  ],
   "preferences": {
     "notifications": true,
     "emailUpdates": true,
@@ -126,12 +123,7 @@ An organization represents a Client Organization and provides the logical segreg
     "settings": {
       "defaultOrganizationRole": "pending",
       "defaultEngagementRole": "sme"
-    },
-    "members": [{
-        "user_id": "user@org-domain.org",
-        "roles": ["admin"],
-        "_comment": "These roles are scoped to the organization only."
-    }],    
+    },   
     "createdBy": "user-1752812035794",
     "createdDate": "2025-07-18T03:46:09.251+00:00",
     "lastUpdated": "2025-07-18T04:13:55.798+00:00"
@@ -156,6 +148,14 @@ When an unknown user authenticates to Spurilo they are auto-provisioned as 'pend
 Organization.admins should receive a notification of pending auto-provisioned users.
 
 System.admins should receive a notification of pending auto-provisioned organizations.
+
+
+
+
+⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
+
+
+
 
 ## Engagements
 _(Mongo db\collection: `spurilo\engagements`)_
@@ -353,19 +353,31 @@ _(Mongo db\collection: `spurilo\ssrc-0_1_0`)_
 }
 ```
 
-  ============================================================================================================================
+  =====================================================================================================================
   *** Rethinking **
-  ============================================================================================================================
+  =====================================================================================================================
 
-I'm building the design documentation for an app to support cyber compliance assessments. I've been trying to keep a very segmented and compartmentalized design, with each component having a single responsibility. I'm using mongoDB on the back end, and I've struggled with how to store data relating to engagements, the associated requirements that will be assessed, and the evidence that will be collected. 
+Need to redo everything to this:
 
-The json below demonstrates the data / relationship structure I imagine being required by the application. The ARL section could be quite large, and given that the 'response' section is stored with the requirement, could grow with each response or message thread (which is also in this data structure). More than one engagement could be in progress at the same time, and potentially more than auditor could be using the platform at the same time.  My concern is performance and integrity.
+spurilo
+    /orgs - org detail records
+    /users - user recrods
+    /grants - linking users to roles, memberships, and scopes
 
-My instinct is to break this into several collections, but given the one to many relationships between many components, I'm not sure how to best structure this.
+    /catalogs - index of available requirement catalogs (e.g. NIST, ISO, etc.) if orgID != null, this is an organization specific catalog
+    /requirements - listing of all requirements from all catalogs with links to catalog collections    
+    /mappings - control mappings between catalogs (ISO to SOC2 for example)
 
-The application database is called `spurilo`. The json below could be a record in `spurilo\engagements`, or it could be broken into several collections. Engagements and all associated data (requirements, responses, etc.) are 'owned' by an 'organization', but I  know of no way to model `spurilo\organization_name\engagements\requirements` in mongo.
+    /engagements - engagement details records
+    /engagementRequirements - linking requirements from one or more catalogs to an engagement-specific Audit Request List. This is the Audit Request List (ARL). records include a response object for each requirement with linkedEvidenceFiles[], linkedEvidenceLinks[], and linkedEvidenceStatements[].
+    /evidenceFiles - file artifacts
+    /evidenceLinks - link artifacts
+    /evidenceStatements - statement artifacts 
 
-Please revire the json below, and help me determine the best way to structure this data in mongo. Feel free to suggest improvements to the data model itself, or point out any issues or concerns you may have.
+    /threads - messaging threads
+    /thread_messages - messages within a thread
+
+
 
 ```json
 [{
