@@ -53,7 +53,7 @@ Spurilo tracks key user data including their associated 'organization', preferen
 ### Sample User Record
 ```json
 {
-  "_id": "688a2154ca83b052609f5de8",
+  "id": "688a2154ca83b052609f5de8",
   "email": "dave@slackspace.net",
   "emailVerified": true,
   "firstName": "David",
@@ -77,7 +77,7 @@ Spurilo tracks key user data including their associated 'organization', preferen
   "lastLogin": {
     "$date": "2025-07-18T04:28:00.947Z"
   },
-  "createdDate": {
+  "createdAt": {
     "$date": "2025-07-18T04:27:49.159Z"
   },
   "lastUpdated": {
@@ -125,7 +125,7 @@ An organization represents a Client Organization and provides the logical segreg
       "defaultEngagementRole": "sme"
     },   
     "createdBy": "user-1752812035794",
-    "createdDate": "2025-07-18T03:46:09.251+00:00",
+    "createdAt": "2025-07-18T03:46:09.251+00:00",
     "lastUpdated": "2025-07-18T04:13:55.798+00:00"
 }
 ```
@@ -164,7 +164,7 @@ A organization can sponsor an 'Engagement'. An Engagement is a multi-phased audi
 
 ```json
 {
-    "_id": "68890b91b4a366adb54a6abc",
+    "id": "68890b91b4a366adb54a6abc",
     "org": "orgID",
     "type": "engagement_type",
     "engagement_uid": "orgID_engagement_type_####:v",
@@ -199,7 +199,7 @@ A organization can sponsor an 'Engagement'. An Engagement is a multi-phased audi
     }],
     "notes": "",
     "portal_url": "/engagements/${this.id}",
-    "created": "date/timestamp",
+    "createdAt": "date/timestamp",
     "modified": "date/timestamp"
   }
 ```
@@ -248,7 +248,7 @@ Example: if a collection has a slug of 'nist_csf-2_0_0', then the requirements f
 
 ```json
 {
-  "_id": "6869835ace7f16c6fce84f8b",
+  "id": "6869835ace7f16c6fce84f8b",
   "type": "Published Framework",
   "name": "NIST Cybersecurity Framework",
   "shortName": "NIST CSF",
@@ -261,7 +261,7 @@ Example: if a collection has a slug of 'nist_csf-2_0_0', then the requirements f
   "license": { "name": "CC BY 4.0", "url": "https://creativecommons.org/licenses/by/4.0/" }
 },
 {
-  "_id": "688a6ac557c1d00a61563d1c",
+  "id": "688a6ac557c1d00a61563d1c",
   "type": "Private Catalogue",
   "name": "Slackspace Requirements Catalogue",
   "description": "",
@@ -275,7 +275,7 @@ Example: if a collection has a slug of 'nist_csf-2_0_0', then the requirements f
   "license": { "name": "Slackspace Subscription", "url": "https://slackspace.net" }
 },
 {
-  "_id": "688a9581945ae546cc2b163e",
+  "id": "688a9581945ae546cc2b163e",
   "type": "Custom Requirement Catalogue",  
   "name": "Acme Custom Control Framework",
   "description": "ISO 27001, SOC2 Security, and custom requirements",
@@ -310,7 +310,7 @@ _(Mongo db\collection: `spurilo\ssrc-0_1_0`)_
 
 ```json
 {
-  "_id": "686c624a82bce9fe182a6c2b",
+  "id": "686c624a82bce9fe182a6c2b",
   "type": "Requirement",
   "_comment": "Requirements.type can be any of: Requirement | Implementation Guidance | Implementation Example | Testing Requirement | Required Evidence",
   "source": {
@@ -363,25 +363,354 @@ spurilo
     /orgs - org detail records
     /users - user recrods
     /grants - linking users to roles, memberships, and scopes
-
-    /catalogs - index of available requirement catalogs (e.g. NIST, ISO, etc.) if orgID != null, this is an organization specific catalog
+    /catalogs - index of available requirement catalogs (e.g. NIST, ISO, etc.) if catalog.org != null, this is an organization specific catalog
     /requirements - listing of all requirements from all catalogs with links to catalog collections    
     /mappings - control mappings between catalogs (ISO to SOC2 for example)
-
     /engagements - engagement details records
-    /engagementRequirements - linking requirements from one or more catalogs to an engagement-specific Audit Request List. This is the Audit Request List (ARL). records include a response object for each requirement with linkedEvidenceFiles[], linkedEvidenceLinks[], and linkedEvidenceStatements[].
+    /engagementRequirements - linking requirements from one or more catalogs to an engagement-specific Audit Request List (ARL). 
+    /evidenceAttachments - maps evidence artifacts to requirements
     /evidenceFiles - file artifacts
-    /evidenceLinks - link artifacts
+    /evidenceLinks - URL/link artifacts
     /evidenceStatements - statement artifacts 
-
     /threads - messaging threads
-    /thread_messages - messages within a thread
+    /threadMessages - messages within a thread
+
+** spurilo/orgs **
+```json
+{
+    "slug": "acme_automatic_express",
+    "crmLink": "https://slackspace.capsulecrm.com/party/272828446",
+    "name": "ACME Automatic Express",
+    "akaNames": { 
+        "formalName": "ACME Automatic Express, LLC",
+        "friendlyName": "ACME Automatic",
+        "shortName": "ACME",
+        "dba": "",
+        "formerly": ["Acme Corp"],
+        "_comment": "name variants used in deliverables."
+    },
+    "status": "pending|active|paused|disabled|archived",
+    "orgDomains": ["org-domain.org", "client-domain.com"],    
+    "settings": {
+      "defaultOrgRole": "pending",
+      "defaultEngagementRole": "sme"
+    },   
+    "createdBy": "user-1752812035794",
+    "createdAt": "date/timestamp",
+    "lastUpdated": "date/timestamp"
+}
+```
+
+** spurilo/users **
+```json
+{
+  "email": "dave@slackspace.net",
+  "emailVerified": true,
+  "firstName": "David",
+  "lastName": "Meade",
+  "orgId": "{org._id}",
+  "preferences": {
+    "notifications": true,
+    "emailUpdates": true,
+    "timezone": "UTC"
+  },
+  "status": "active",
+  "oauthProviders": {
+    "google": {
+      "id": "###_OAUTH_ID_###",
+      "lastUsed": {
+        "$date": "2025-07-18T04:28:46.532Z"
+      }
+    }
+  },
+  "lastLogin": {
+    "$date": "2025-07-18T04:28:00.947Z"
+  },
+  "createdAt": {
+    "$date": "2025-07-18T04:27:49.159Z"
+  },
+  "lastUpdated": {
+    "$date": "2025-07-18T04:28:00.948Z"
+  }
+} 
+```
+
+** spurilo/grants **
+```json
+{
+    "orgId": "{org._id}",
+    "userId": "{user._id}",
+    "scope": "organization|engagement|engagement-requirement",
+    "scopeObject": "{org._id}|{engagement._id}|{engagementRequirement._id}",
+    "roles": ["engagement owner", "sme"],
+    "createdAt": "date/timestamp",
+    "lastUpdated": "date/timestamp"
+}
+```
+
+** spurilo/catalogs **
+```json
+{
+  "slug": "nist_csf-2_0_0",
+  "type": "Published Framework",
+  "name": "NIST Cybersecurity Framework",
+  "shortName": "NIST CSF",
+  "version": "2.0.0",
+  "status": "final",
+  "maintainer": "NIST",
+  "uri": "https://www.nist.gov/cyberframework",
+  "availability": "public",
+  "license": { "name": "CC BY 4.0", "url": "https://creativecommons.org/licenses/by/4.0/" }
+},
+{
+  "slug": "ssrc-0_1_0",
+  "type": "Private Catalogue",
+  "name": "Slackspace Requirements Catalogue",
+  "description": "",
+  "shortName": "SSRC",
+  "version": "0.1.0",
+  "status": "draft",
+  "maintainer": "Slackspace",
+  "uri": "https://slackspace.net",
+  "availability": "subscription",
+  "license": { "name": "Slackspace Subscription", "url": "https://slackspace.net" }
+},
+{
+  "slug": "acme_ccf-1",
+  "type": "Custom Requirement Catalogue",  
+  "name": "Acme Custom Control Framework",
+  "description": "ISO 27001, SOC2 Security, and custom requirements",
+  "shortName": "ACME CCF",
+  "version": "1",
+  "status": "draft",
+  "maintainer": "Slackspace",
+  "uri": "https://slackspace.net",
+  "availability": "Organizational",
+  "orgId": "org._id",
+  "ownerId": "user_id"
+}
+```
+
+** spurilo/requirements **
+```json
+{
+  "type": "Requirement",
+  "_comment": "Requirements.type can be any of: Requirement | Implementation Guidance | Implementation Example | Testing Requirement | Required Evidence",
+  "sourceCatalog": "{catalog._id}",
+  "ref": "X.1",
+  "uid": "{catalog.slug}:{ref}",
+  "parent": "ssrc-0_1_0:X",  
+  "domain": "Leadership",
+  "name": "Leadership Commitment to Ethics",
+  "text": "The entity demonstrates a commitment to integrity and ethical values.",
+  "tags": [
+    "example",
+    "ethics"
+  ],
+  "testPlans": [
+    {
+      "slug": "{uid}#test-{counter}",
+      "description": "Review ethics training logs and signed code of conduct attestations for at least 2 years.",
+      "author": "Slackspace",
+      "date": "2024-03-01T00:00:00Z"
+    }
+  ],
+  "notes": [
+    {
+      "text": "Some notes about this requirement",
+      "data": [{
+        "_comment": "Arbitrary data elements stored with the note.",
+        "key": "keyword",
+        "value": "value"
+      }],
+      "private": true,
+      "author": "Slackspace",
+      "date": "2023-10-01T00:00:00Z",
+      "_comment": "notes can be used to provide additional context or information about the requirement to the auditor."
+    }
+  ]    
+}
+```
+
+** spurilo/mappings **
+```json
+{
+  "baseRequirementUid": "ssrc-0_1_0:X.3",
+  "mappedRequirements": [{
+    "uid": "nist_csf-2_0_0:GV.OC-03",
+    "mappingToBase": "subset",
+    "justification": "The mapped requirement addresses X but not Y from the base requirement.",
+    "confidence": 0.9,
+    "createdBy": "user.email",
+    "createdAt": "date/timestamp",
+    "lastUpdated": "date/timestamp",
+    "notes": {
+      "text": "Some notes about this mapping",
+      "private": true,
+      "author": "Davo",
+      "date": "date/timestamp"
+    }    
+  }]
+}
+```
+
+** spurilo/engagements **
+```json
+{
+    "org": "{org._id}",
+    "type": "{engagementType}",
+    "slug": "{org.slug}_{engagementType}_YYYY_##",
+    "name": "ACME YYYY Internal Audit - YYYY.MM (####)",
+    "frameworks": [{
+        "framework": "SOC2",
+        "components": ["security", "availability", "processing integrity", "confidentiality", "privacy" ]
+    },
+    {
+        "framework": "ISO27001"
+    }],
+    "status": "pending|scheduled|active|extended|closed",
+    "stage": "onboarding|fieldwork|deliverable creation|deliverable review|wrap-up",
+    "timeline": {
+        "startDate": "date/timestamp",
+        "onboardSurveyDue": "date/timestamp",
+        "irlDelivery": "date/timestamp",
+        "kickoffCall": "",
+        "fieldworkStart": "date/timestamp",
+        "fieldworkEnd": "date/timestamp",
+        "evidenceCutoff": "date/timestamp",
+        "closingCall": "",
+        "draftReportDelivery": "date/timestamp",
+        "endDate": "date/timestamp",
+        "deliverablesDue": "date/timestamp"
+    },
+    "ownerId": "user._id",
+    "notes": "",
+    "portalUrl": "/engagements/{org}",
+    "createdAt": "date/timestamp",
+    "lastUpdated": "date/timestamp"
+  }
+```
+
+** spurilo/engagementRequirements **
+```json
+{
+  "orgId": "{org._id}",
+  "engagementId": "{engagement._id}",
+  "requirementId": "{requirement._id}", // points to /requirements (catalog requirement)
+  "status": "",
+  "owners": {
+    "requirementOwnerId": "user._id",
+    "smeUserIds": ["user._id"],
+    "additionalUserIds": ["user._id"]
+  },
+  "dueBy": "",
+  "response": {
+    "text": "",
+    "userId": "user._id",
+    "respondedAt": "date/timestamp",
+    "acceptedAt": "date/timestamp",
+    "acceptingUserId": "user._id"
+  },
+  "threadIds": ["threadId"],
+  "createdAt": "",
+  "lastUpdated": ""
+}
+```
+
+** spurilo/evidenceAttachments **
+```json
+{
+  "orgId": "{org._id}",
+  "engagementId": "{engagement._id}",
+  "engagementRequirementId": "{engagementRequirement._id}",
+  "evidenceType": "file|url|statement",
+  "evidenceId": "",
+  "submittedBy": "user._id",
+  "submittedAt": "date/timestamp"
+}
+```
+
+** spurilo/evidenceFiles, spurilo/evidenceLinks, spurilo/evidenceStatements **
+```json
+{
+  "evidenceFiles": [
+    {
+      "id": "68890b91b4a366adb54a6abc",
+      "orgId": "{org._id}",
+      "fileName": "file1.pdf",
+      "type": "pdf",
+      "uri": "s3://example-bucket/path/to/file1.pdf", 
+      "size": 1024,
+      "sha256": "sha256 hash of file",
+      "md5": "md5 hash of file",
+      "sha1": "sha1 hash of file",
+      "name": "Physical Security Policy Document",
+      "description": "Description of file1.pdf (Physical Security Policy Document)",
+      "frequentReference": true,
+      "submitterId": "user._id",
+      "submitDate": "2024-03-01T00:00:00Z",
+    }
+  ],
+  "evidenceLinks": [
+    {
+      "orgId": "{org._id}",
+      "url": "https://example.com",
+      "name": "Physical Security Policy Document",
+      "description": "Description of file1.pdf (Physical Security Policy Document)",
+      "frequentReference": true,
+      "submitterId": "user._id",
+      "submitDate": "2024-03-01T00:00:00Z",
+    }
+  ],
+  "evidenceStatements": [
+    {
+      "orgId": "{org._id}",
+      "name": "Cloud Based Infrastructure Statement",
+      "type": "Statement",
+      "statement": "free form text statement, that can be applied to one or more requirements in bulk.",
+      "submitterId": "user._id",
+      "submitDate": "2024-03-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+** spurilo/threads, spurilo/threadMessages **
+```json
+{
+  "threads": [
+    {
+      "orgId": "{org._id}",
+      "name": "Thread Name",
+      "description": "Thread Description",
+      "submitterId": "user._id",
+      "submitDate": "2024-03-01T00:00:00Z",
+      "requiredFollowUp": true,
+      "scope": "engagement|engagementRequirement",
+      "engagementId": "{engagement._id}",
+      "engagementRequirementId": "{engReq._id}"      
+    }
+  ],
+  "threadMessages": [
+    {
+      "orgId": "{org._id}",
+      "threadId": "{thread._id}",
+      "message": "free form text message",
+      "submitterId": "user._id",
+      "submitDate": "2024-03-01T00:00:00Z",
+      "inReplyTo": "threadMessage._id"
+    }
+  ]
+}
+```
 
 
 
+
+================================
 ```json
 [{
-    "_id": "68890b91b4a366adb54a6abc",
+    "id": "68890b91b4a366adb54a6abc",
     "org": "orgID",
     "type": "engagement_type",
     "engagement_uid": "orgID_engagement_type_####:v",
@@ -418,13 +747,13 @@ spurilo
     }],
     "notes": [],
     "portal_url": "/engagements/${this.id}",
-    "created": "date/timestamp",
+    "createdAt": "date/timestamp",
     "modified": "date/timestamp",
     "artifacts": [
       {
         "files": [
           {
-            "_id": "68890b91b4a366adb54a6abc",
+            "id": "68890b91b4a366adb54a6abc",
             "fileName": "file1.pdf",
             "type": "pdf",
             "uri": "s3://example-bucket/path/to/file1.pdf", 
@@ -442,7 +771,7 @@ spurilo
         ],
         "statements": [
           {
-            "_id": "68890b91b4a366adb54a6def",
+            "id": "68890b91b4a366adb54a6def",
             "name": "Cloud Based Infrastructure Statement",
             "type": "Statement",
             "statement": "free form text statement, that can be applied to one or more requirements in bulk.",
@@ -460,13 +789,13 @@ spurilo
         "channelType": "direct|group",
         "messages": [
           {
-            "_id": "uid",
+            "id": "uid",
             "text": "free form text message",
             "submitDate": "2024-03-01T00:00:00Z",
             "from": "userID",
             "to": "userID",
             "_to-comment": "Not needed if channelType is group",
-            "inreplyto": "_id",
+            "inreplyto": "id",
             "attachments": ["artifacts.files.fileid1", "artifacts.files.fileid2"]
           }
         ]
@@ -474,10 +803,10 @@ spurilo
     ],
     "ARL": [
       {
-        "createDate": "2024-03-01T00:00:00Z",
+        "createdAt": "2024-03-01T00:00:00Z",
         "statusHistory": [
           {
-            "_id": "uid",
+            "id": "uid",
             "status": "drafting",
             "notes": "free form text notes about the status change",
             "appliedBy": "userID",
@@ -485,7 +814,7 @@ spurilo
           }
         ],
         "requirements": [{
-          "_id": "686c624a82bce9fe182a6c2b",
+          "id": "686c624a82bce9fe182a6c2b",
           "type": "Requirement",
           "_comment": "Requirements.type can be any of: Requirement | Implementation Guidance | Implementation Example | Testing Requirement | Required Evidence",
           "source": {
@@ -549,7 +878,7 @@ Mappings allow control requirement profiles or frameworks to map across one or m
 
 ```json
 {
-  "_id": "6887ddd6631fcdbb0fb1a135",
+  "id": "6887ddd6631fcdbb0fb1a135",
   "ref_id": "ssrc-0_1_0:X.3",
   "base_requirement_uid": "ssrc-0_1_0:X.3",
   "mapped_requirements": [{
@@ -557,8 +886,8 @@ Mappings allow control requirement profiles or frameworks to map across one or m
     "mapping_to_base": "subset",
     "justification": "The mapped requirement addresses X but not Y from the base requirement.",
     "confidence": 0.9,
-    "created_by": "Davo",
-    "created_at": "2025-07-26T12:34:56Z",
+    "createdBy": "Davo",
+    "createdAt": "2025-07-26T12:34:56Z",
     "notes": {
       "text": "Some notes about this mapping",
       "private": true,
@@ -570,15 +899,15 @@ Mappings allow control requirement profiles or frameworks to map across one or m
 ```
 ```json
 {
-  "_id": "6887ddd6631fcdbb0fb1a135",
+  "id": "6887ddd6631fcdbb0fb1a135",
   "base_requirement_uid": "ssrc-0_1_0:X.3",
   "mapped_requirements": [{
     "uid": "nist_csf-2_0_0:GV.OC-03",
     "mapping_to_base": "subset",
     "justification": "The mapped requirement addresses X but not Y from the base requirement.",
     "confidence": 0.9,
-    "created_by": "Davo",
-    "created_at": "2025-07-26T12:34:56Z",
+    "createdBy": "Davo",
+    "createdAt": "2025-07-26T12:34:56Z",
     "notes": {
       "text": "Some notes about this mapping",
       "private": true,
